@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+@theme {
+  --color-stone-50: #fafaf9;
+  --color-stone-900: #1c1917;
+  --color-stone-600: #57534e;
+  --color-stone-500: #78716c;
+
+  --font-serif: var(--font-source-serif), ui-serif, Georgia, serif;
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+@layer base {
+  body {
+    @apply bg-stone-50 text-stone-900 font-serif;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-light;
+  }
+}
+
+@layer components {
+  .dot-grain {
+    background-image: radial-gradient(circle, rgba(28, 25, 23, 0.05) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .hover-underline {
+    position: relative;
+  }
+
+  .hover-underline::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 1px;
+    bottom: -2px;
+    left: 0;
+    background-color: currentColor;
+    transition: width 0.3s ease;
+  }
+
+  .hover-underline:hover::after {
+    width: 100%;
+  }
+
+  .reveal {
+    animation: reveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    opacity: 0;
+  }
+
+  @keyframes reveal {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .stagger-1 { animation-delay: 0.05s; }
+  .stagger-2 { animation-delay: 0.15s; }
+  .stagger-3 { animation-delay: 0.25s; }
+}
