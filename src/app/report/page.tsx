@@ -174,7 +174,7 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
                           <PermitRow permit={permit} index={i + 3} />
                         </div>
                       ))}
-                      <PaywallOverlay hiddenCount={hiddenCount} address={address} />
+                      <PaywallOverlay hiddenCount={hiddenCount} address={address} city={citySlug} />
                     </>
                   )}
                 </>
