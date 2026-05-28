@@ -12,7 +12,6 @@ interface PaywallOverlayProps {
 export default function PaywallOverlay({ hiddenCount, address, city }: PaywallOverlayProps) {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
-  const [emailSuccess, setEmailSuccess] = useState(false);
 
   const handleStripe = async () => {
     setLoading(true);
@@ -43,10 +42,16 @@ export default function PaywallOverlay({ hiddenCount, address, city }: PaywallOv
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, city, address }),
       });
-      setEmailSuccess(true);
+
+      // Unlock the report immediately on this page
+      const params = new URLSearchParams({
+        city,
+        address,
+        unlocked: "true",
+      });
+      window.location.href = `/report?${params.toString()}`;
     } catch (e) {
       console.error(e);
-    } finally {
       setLoading(false);
     }
   };
@@ -88,41 +93,32 @@ export default function PaywallOverlay({ hiddenCount, address, city }: PaywallOv
           </div>
 
           <div className="p-8 border border-stone-900/10 bg-white flex flex-col justify-between">
-            {emailSuccess ? (
-              <div className="h-full flex flex-col items-center justify-center py-4">
-                <div className="text-emerald-600 mb-4">✓</div>
-                <p className="font-serif text-sm">Check your inbox. Report sent.</p>
+            <div>
+              <div className="font-mono text-[9px] uppercase tracking-widest text-stone-400 mb-4 block">
+                Option 02 · Registration
               </div>
-            ) : (
-              <>
-                <div>
-                  <div className="font-mono text-[9px] uppercase tracking-widest text-stone-400 mb-4 block">
-                    Option 02 · Registration
-                  </div>
-                  <div className="text-3xl font-display font-light mb-2">Free</div>
-                  <p className="font-serif text-xs text-stone-500 mb-8 leading-relaxed">
-                    Get this report sent to your email. We&apos;ll send you weekly property insights.
-                  </p>
-                </div>
-                <form onSubmit={handleSubscribe} className="space-y-3">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email address"
-                    required
-                    className="w-full px-4 py-2 border border-stone-900/10 font-serif text-sm focus:outline-none"
-                  />
-                  <button
-                    disabled={loading}
-                    className="w-full border border-stone-900/90 text-stone-900 py-3 font-mono text-[10px] uppercase tracking-widest hover:bg-stone-900 hover:text-stone-50 transition-colors flex items-center justify-center gap-2"
-                  >
-                    {loading ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
-                    Get via Email
-                  </button>
-                </form>
-              </>
-            )}
+              <div className="text-3xl font-display font-light mb-2">Free</div>
+              <p className="font-serif text-xs text-stone-500 mb-8 leading-relaxed">
+                Get this report sent to your email. We&apos;ll send you weekly property insights.
+              </p>
+            </div>
+            <form onSubmit={handleSubscribe} className="space-y-3">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email address"
+                required
+                className="w-full px-4 py-2 border border-stone-900/10 font-serif text-sm focus:outline-none"
+              />
+              <button
+                disabled={loading}
+                className="w-full border border-stone-900/90 text-stone-900 py-3 font-mono text-[10px] uppercase tracking-widest hover:bg-stone-900 hover:text-stone-50 transition-colors flex items-center justify-center gap-2"
+              >
+                {loading ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
+                Unlock Report
+              </button>
+            </form>
           </div>
         </div>
       </div>
