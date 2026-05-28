@@ -1,5 +1,6 @@
 import { Permit } from "@/lib/socrata";
 import { translatePermitType } from "@/lib/analyze";
+import { getPermitKnowledge } from "@/lib/permit-knowledge";
 
 interface PermitRowProps {
   permit: Permit;
@@ -8,9 +9,11 @@ interface PermitRowProps {
 
 export default function PermitRow({ permit, index }: PermitRowProps) {
   const translatedType = translatePermitType(permit.type);
+  const knowledge = getPermitKnowledge(permit.type);
+
   const hasValidDescription =
     permit.description &&
-    permit.description.trim().length > 0 &&
+    permit.description.trim().length > 3 &&
     permit.description.toLowerCase() !== "unknown" &&
     permit.description.toLowerCase() !== "no description provided";
 
@@ -18,6 +21,12 @@ export default function PermitRow({ permit, index }: PermitRowProps) {
     permit.value &&
     !isNaN(Number(permit.value)) &&
     Number(permit.value) > 0;
+
+  const isOpenStatus =
+    permit.status.toLowerCase().includes("issued") ||
+    permit.status.toLowerCase().includes("open") ||
+    permit.status.toLowerCase().includes("active") ||
+    permit.status.toLowerCase().includes("pending");
 
   return (
     <div className="bg-white p-8 group">
@@ -43,7 +52,7 @@ export default function PermitRow({ permit, index }: PermitRowProps) {
               {translatedType}
             </h3>
             <span className={`font-mono text-[9px] uppercase px-2 py-0.5 rounded-[2px] border ${
-              permit.status.toLowerCase().includes('issued') || permit.status.toLowerCase().includes('open')
+              isOpenStatus
                 ? 'border-emerald-900/20 text-emerald-900 bg-emerald-50'
                 : 'border-stone-900/20 text-stone-500 bg-stone-50'
             }`}>
@@ -57,6 +66,28 @@ export default function PermitRow({ permit, index }: PermitRowProps) {
             </p>
           )}
 
+          {/* Knowledge Layer — What this permit type means */}
+          {knowledge && (
+            <div className="mb-6 p-5 bg-stone-50 border-l-2 border-stone-900/20">
+              <div className="font-mono text-[9px] uppercase tracking-widest text-stone-500 mb-2">
+                About this permit
+              </div>
+              <p className="font-serif text-sm text-stone-700 leading-relaxed mb-3">
+                {knowledge.description}
+              </p>
+              {isOpenStatus && (
+                <div className="mt-3 pt-3 border-t border-stone-900/5">
+                  <div className="font-mono text-[9px] uppercase tracking-widest text-amber-800 mb-2">
+                    ⚠ If this permit is open
+                  </div>
+                  <p className="font-serif text-sm text-stone-700 leading-relaxed">
+                    {knowledge.ifOpen}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-stone-900/5">
             <div>
               <div className="font-mono text-[9px] uppercase tracking-widest text-stone-400 mb-1">
@@ -66,6 +97,26 @@ export default function PermitRow({ permit, index }: PermitRowProps) {
                 {hasValidValue ? `$${Number(permit.value).toLocaleString()}` : 'Not disclosed'}
               </div>
             </div>
+            {knowledge?.remediationCost && (
+              <div>
+                <div className="font-mono text-[9px] uppercase tracking-widest text-stone-400 mb-1">
+                  Resolution Cost
+                </div>
+                <div className="font-serif text-sm text-stone-900">
+                  {knowledge.remediationCost}
+                </div>
+              </div>
+            )}
+            {knowledge?.whoDoesIt && (
+              <div>
+                <div className="font-mono text-[9px] uppercase tracking-widest text-stone-400 mb-1">
+                  Who Does This Work
+                </div>
+                <div className="font-serif text-sm text-stone-900">
+                  {knowledge.whoDoesIt}
+                </div>
+              </div>
+            )}
             <div>
               <div className="font-mono text-[9px] uppercase tracking-widest text-stone-400 mb-1">
                 Jurisdiction
