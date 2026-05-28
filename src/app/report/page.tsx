@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import ScoreCard from "@/components/report/ScoreCard";
 import PermitRow from "@/components/report/PermitRow";
 import PaywallOverlay from "@/components/report/PaywallOverlay";
-
+import VerificationGuide from "@/components/report/VerificationGuide";
 interface ReportPageProps {
   searchParams: Promise<{
     city?: string;
@@ -206,6 +206,11 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
             )}
           </div>
         </section>
+      <VerificationGuide
+         citySlug={citySlug}
+         cityName={city.name}
+         hasOpenPermits={analysis.stats.open > 0}
+       />
       </main>
       
       <Footer />
