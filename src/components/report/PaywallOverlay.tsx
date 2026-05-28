@@ -6,9 +6,10 @@ import { Lock, Mail, CreditCard, Loader2 } from "lucide-react";
 interface PaywallOverlayProps {
   hiddenCount: number;
   address: string;
+  city: string;
 }
 
-export default function PaywallOverlay({ hiddenCount, address }: PaywallOverlayProps) {
+export default function PaywallOverlay({ hiddenCount, address, city }: PaywallOverlayProps) {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [emailSuccess, setEmailSuccess] = useState(false);
@@ -16,9 +17,17 @@ export default function PaywallOverlay({ hiddenCount, address }: PaywallOverlayP
   const handleStripe = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/checkout", { method: "POST" });
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ city, address }),
+      });
       const data = await res.json();
-      window.location.href = data.url;
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setLoading(false);
+      }
     } catch (e) {
       console.error(e);
       setLoading(false);
@@ -31,7 +40,8 @@ export default function PaywallOverlay({ hiddenCount, address }: PaywallOverlayP
     try {
       await fetch("/api/subscribe", {
         method: "POST",
-        body: JSON.stringify({ email, address }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, city, address }),
       });
       setEmailSuccess(true);
     } catch (e) {
@@ -47,12 +57,12 @@ export default function PaywallOverlay({ hiddenCount, address }: PaywallOverlayP
         <div className="w-16 h-16 bg-stone-900 text-stone-50 rounded-full flex items-center justify-center mx-auto mb-8">
           <Lock size={24} strokeWidth={1.5} />
         </div>
-        
+
         <h3 className="font-display text-4xl font-light mb-4">
           Unlock {hiddenCount} more <span className="italic">records</span>
         </h3>
         <p className="font-serif text-stone-600 mb-12 max-w-md mx-auto">
-          The complete filing history for this address is restricted. 
+          The complete filing history for this address is restricted.
           Choose an option below to view all historical permits.
         </p>
 
@@ -67,7 +77,7 @@ export default function PaywallOverlay({ hiddenCount, address }: PaywallOverlayP
                 One-time unlock for this property report. PDF download included.
               </p>
             </div>
-            <button 
+            <button
               onClick={handleStripe}
               disabled={loading}
               className="w-full bg-stone-900 text-stone-50 py-3 font-mono text-[10px] uppercase tracking-widest hover:bg-stone-800 transition-colors flex items-center justify-center gap-2"
@@ -95,15 +105,15 @@ export default function PaywallOverlay({ hiddenCount, address }: PaywallOverlayP
                   </p>
                 </div>
                 <form onSubmit={handleSubscribe} className="space-y-3">
-                  <input 
-                    type="email" 
+                  <input
+                    type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Email address"
                     required
                     className="w-full px-4 py-2 border border-stone-900/10 font-serif text-sm focus:outline-none"
                   />
-                  <button 
+                  <button
                     disabled={loading}
                     className="w-full border border-stone-900/90 text-stone-900 py-3 font-mono text-[10px] uppercase tracking-widest hover:bg-stone-900 hover:text-stone-50 transition-colors flex items-center justify-center gap-2"
                   >
