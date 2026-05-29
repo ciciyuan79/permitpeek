@@ -1,7 +1,11 @@
+// src/app/report/page.tsx
+// Updated to use accurate total count from fetchPermitsWithCount
+// REPLACE your entire src/app/report/page.tsx with this file
+
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CITIES } from "@/lib/cities";
-import { fetchPermits } from "@/lib/socrata";
+import { fetchPermitsWithCount } from "@/lib/socrata";
 import { analyzePermits } from "@/lib/analyze";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
@@ -9,6 +13,7 @@ import ScoreCard from "@/components/report/ScoreCard";
 import PermitRow from "@/components/report/PermitRow";
 import PaywallOverlay from "@/components/report/PaywallOverlay";
 import VerificationGuide from "@/components/report/VerificationGuide";
+
 interface ReportPageProps {
   searchParams: Promise<{
     city?: string;
@@ -39,10 +44,13 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
 
   let permits = [];
   let analysis = null;
+  let totalCount = 0;
 
   try {
-    permits = await fetchPermits(city, address);
-    analysis = analyzePermits(permits);
+    const result = await fetchPermitsWithCount(city, address);
+    permits = result.permits;
+    totalCount = result.totalCount;
+    analysis = analyzePermits(permits, totalCount);
   } catch (error) {
     console.error("Report generation error:", error);
     return (
@@ -64,7 +72,11 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
 
   const isUnlocked = unlocked === "true";
   const visiblePermits = isUnlocked ? permits : permits.slice(0, 2);
-  const hiddenCount = permits.length - visiblePermits.length;
+  
+  // Use real total for hidden count calculation
+  const hiddenCount = isUnlocked 
+    ? 0 
+    : Math.max(0, totalCount - visiblePermits.length);
 
   return (
     <div className="min-h-screen flex flex-col bg-stone-50">
@@ -130,10 +142,10 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-8 border-t border-stone-900/5">
                   {[
-                    { label: "Total", value: analysis.stats.total },
-                    { label: "Open", value: analysis.stats.open },
-                    { label: "Expired", value: analysis.stats.expired },
-                    { label: "Finaled", value: analysis.stats.finaled },
+                    { label: "Total Records", value: analysis.stats.total.toLocaleString() },
+                    { label: "Open", value: analysis.stats.open.toString() },
+                    { label: "Expired", value: analysis.stats.expired.toString() },
+                    { label: "Finaled", value: analysis.stats.finaled.toString() },
                   ].map((stat, i) => (
                     <div key={i}>
                       <div className="font-mono text-[9px] uppercase tracking-widest text-stone-400 mb-1">
@@ -145,6 +157,12 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
                     </div>
                   ))}
                 </div>
+                
+                {analysis.stats.total > analysis.stats.showing && (
+                  <p className="mt-6 font-serif text-xs text-stone-500 italic">
+                    Recent counts (Open / Expired / Finaled) based on the {analysis.stats.showing} most recent permits.
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -158,6 +176,11 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
                 § 02 · Permit Registry
               </span>
               <h2 className="font-display text-3xl font-light">Historical Records</h2>
+              {totalCount > permits.length && (
+                <p className="font-serif text-sm text-stone-500 mt-2">
+                  Showing the {permits.length} most recent of {totalCount.toLocaleString()} total permits
+                </p>
+              )}
             </div>
             
             <div className="space-y-1px bg-stone-900/10 border border-stone-900/10 relative">
@@ -206,11 +229,12 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
             )}
           </div>
         </section>
-      <VerificationGuide
-         citySlug={citySlug}
-         cityName={city.name}
-         hasOpenPermits={analysis.stats.open > 0}
-       />
+        
+        <VerificationGuide
+          citySlug={citySlug}
+          cityName={city.name}
+          hasOpenPermits={analysis.stats.open > 0}
+        />
       </main>
       
       <Footer />
