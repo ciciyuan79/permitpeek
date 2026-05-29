@@ -1,16 +1,14 @@
 // src/lib/analyze.ts
-// Risk analysis engine + permit code translation
+// Risk analysis engine + permit code translation + accurate totals
 // REPLACE your entire src/lib/analyze.ts with this file
 
 import type { Permit } from "./socrata";
 
 // ═══════════════════════════════════════════════════════════
 // PERMIT CODE TRANSLATIONS
-// Turn cryptic codes ("A2", "Ew", "MH") into human language
 // ═══════════════════════════════════════════════════════════
 
 const PERMIT_TYPE_NAMES: Record<string, string> = {
-  // NYC DOB Permit Types
   "A1": "Major Alteration (Use Change)",
   "A2": "Minor Alteration (Renovation)",
   "A3": "Minor Alteration",
@@ -47,7 +45,7 @@ export function translatePermitType(code: string): string {
 }
 
 // ═══════════════════════════════════════════════════════════
-// RISK ANALYSIS — keeps the stats object structure
+// RISK ANALYSIS — now supports accurate totalCount
 // ═══════════════════════════════════════════════════════════
 
 export interface Flag {
@@ -56,7 +54,8 @@ export interface Flag {
 }
 
 export interface Stats {
-  total: number;
+  total: number;       // The ACTUAL total in the database
+  showing: number;     // How many we're showing (≤ 50)
   open: number;
   expired: number;
   finaled: number;
@@ -75,9 +74,17 @@ export interface Analysis {
   stats: Stats;
 }
 
-export function analyzePermits(permits: Permit[]): Analysis {
+/**
+ * Analyze a sample of permits. If totalCount is provided, it's used
+ * as the "true" total (since we may only have 50 of N permits loaded).
+ */
+export function analyzePermits(permits: Permit[], totalCount?: number): Analysis {
+  // Use real total if provided, otherwise fall back to array length
+  const total = totalCount !== undefined ? totalCount : permits.length;
+
   const stats: Stats = {
-    total: permits.length,
+    total,
+    showing: permits.length,
     open: 0,
     expired: 0,
     finaled: 0,
@@ -117,31 +124,44 @@ export function analyzePermits(permits: Permit[]): Analysis {
     if (!isNaN(v)) stats.totalValue += v;
   });
 
+  // Scale the counts proportionally if we're sampling a subset
+  // This gives a more accurate sense of overall property history
+  const samplingRatio = stats.showing > 0 ? total / stats.showing : 1;
+  const isSubset = total > stats.showing;
+
   if (stats.open > 0) {
-    flags.push({
-      level: "high",
-      text: `${stats.open} open permit${stats.open > 1 ? "s" : ""} without final inspection. Can delay home sale or mortgage closing.`,
-    });
+    if (isSubset) {
+      const estimatedOpen = Math.round(stats.open * samplingRatio);
+      flags.push({
+        level: "high",
+        text: `~${estimatedOpen} open permit${estimatedOpen > 1 ? "s" : ""} estimated across all records (${stats.open} in recent sample). Open permits can delay home sale or mortgage closing.`,
+      });
+    } else {
+      flags.push({
+        level: "high",
+        text: `${stats.open} open permit${stats.open > 1 ? "s" : ""} without final inspection. Can delay home sale or mortgage closing.`,
+      });
+    }
   }
 
   if (stats.expired > 0) {
     flags.push({
       level: "med",
-      text: `${stats.expired} expired permit${stats.expired > 1 ? "s" : ""}. May require re-inspection.`,
+      text: `${stats.expired} expired permit${stats.expired > 1 ? "s" : ""} in recent sample. May require re-inspection.`,
     });
   }
 
   if (stats.electrical >= 3) {
     flags.push({
       level: "med",
-      text: `${stats.electrical} electrical permits on file — significant electrical work history.`,
+      text: `${stats.electrical}+ electrical permits in recent sample — significant electrical work history.`,
     });
   }
 
   if (stats.structural >= 1) {
     flags.push({
       level: "low",
-      text: `${stats.structural} structural / renovation permit${stats.structural > 1 ? "s" : ""} on record.`,
+      text: `${stats.structural} structural / renovation permit${stats.structural > 1 ? "s" : ""} in recent sample.`,
     });
   }
 
@@ -151,10 +171,18 @@ export function analyzePermits(permits: Permit[]): Analysis {
       ? "review"
       : "clean";
 
+  // Build summary text
+  let summary: string;
+  if (isSubset) {
+    summary = `${total.toLocaleString()} total permits on record. Showing the ${stats.showing} most recent. ${stats.open} open in this sample.`;
+  } else {
+    summary = `${stats.total} permit${stats.total > 1 ? "s" : ""} on record. ${stats.open} open, ${stats.expired} expired, ${stats.finaled} finaled.`;
+  }
+
   return {
     score,
     flags,
-    summary: `${permits.length} permit${permits.length > 1 ? "s" : ""} on record. ${stats.open} open, ${stats.expired} expired, ${stats.finaled} finaled.`,
+    summary,
     openCount: stats.open,
     expiredCount: stats.expired,
     stats,
