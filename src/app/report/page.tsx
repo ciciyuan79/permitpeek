@@ -106,7 +106,7 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
           <div className="max-w-7xl mx-auto px-6 lg:px-10">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
               <div className="lg:col-span-4">
-                <ScoreCard score={analysis.score} summary={analysis.summary} />
+                <ScoreCard score={analysis.score} scoreValue={analysis.scoreValue} summary={analysis.summary} />
               </div>
               
               <div className="lg:col-span-8">
