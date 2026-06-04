@@ -2,6 +2,8 @@ import Nav from "@/components/Nav";
 import SearchCard from "@/components/SearchCard";
 import Footer from "@/components/Footer";
 import HeroDemo from "@/components/HeroDemo";
+import CoverageMap from "@/components/CoverageMap";
+import PropertyTimeline from "@/components/PropertyTimeline";
 import { CITIES_LIST } from "@/lib/cities";
 import { Home, ShieldCheck, Eye, ArrowRight, CheckCircle2, Search, Shield, Scale, Calendar, HardHat, FileWarning } from "lucide-react";
 import Link from "next/link";
@@ -126,6 +128,16 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
+
+            {/* Timeline showcase */}
+            <div className="grid lg:grid-cols-2 gap-12 items-center mt-20 pt-16 border-t border-stone-900/10">
+              <div>
+                <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-4 block">The Timeline</span>
+                <h3 className="font-display text-3xl md:text-4xl font-light text-stone-900 leading-tight mb-4">See the property&rsquo;s entire life story</h3>
+                <p className="font-serif text-lg text-stone-600 leading-relaxed">Every permit, plotted in time. Built, renovated, re-roofed — and every item still left open and unresolved, flagged the moment you look.</p>
+              </div>
+              <PropertyTimeline />
+            </div>
           </div>
         </section>
 
@@ -159,16 +171,20 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* CITIES */}
+        {/* COVERAGE */}
         <section className="py-28 border-t border-stone-900/10 bg-white/50">
           <div className="max-w-7xl mx-auto px-6 lg:px-10">
-            <div className="mb-16">
+            <div className="mb-12">
               <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-4 block">
                 § 05 · Coverage
               </span>
               <h2 className="font-display text-4xl md:text-5xl font-light text-stone-900 leading-tight">
                 National Database
               </h2>
+            </div>
+
+            <div className="mb-12">
+              <CoverageMap />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-stone-900/10 border border-stone-900/10">
