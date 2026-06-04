@@ -3,7 +3,7 @@ import SearchCard from "@/components/SearchCard";
 import Footer from "@/components/Footer";
 import HeroDemo from "@/components/HeroDemo";
 import { CITIES_LIST } from "@/lib/cities";
-import { Home, ShieldCheck, Eye, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Home, ShieldCheck, Eye, ArrowRight, CheckCircle2, Search, Shield, Scale, Calendar, HardHat, FileWarning } from "lucide-react";
 import Link from "next/link";
 
 export default function HomePage() {
@@ -21,10 +21,10 @@ export default function HomePage() {
                   Property Intelligence · Public Records, Decoded
                 </span>
                 <h1 className="font-display font-light text-stone-900 leading-[0.98] tracking-[-0.02em] mb-6 reveal stagger-1" style={{ fontSize: "clamp(2.75rem, 5vw, 4.75rem)" }}>
-                  Is your house <span className="italic">legally</span> built?
+                  The truth about any property, <span className="italic">before you commit.</span>
                 </h1>
                 <p className="font-serif text-lg md:text-xl text-stone-600 max-w-md mb-8 reveal stagger-2">
-                  Uncover hidden renovations, unpermitted work, contractor track records, and official history from US municipal building records.
+                  Before the biggest purchase of your life, uncover its permit history, hidden renovations, unpermitted work, and the real cost of what&rsquo;s wrong — straight from official US records.
                 </p>
                 <div className="reveal stagger-3">
                   <SearchCard />
@@ -55,12 +55,86 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* HOW IT WORKS */}
+        <section className="py-28 border-t border-stone-900/10">
+          <div className="max-w-7xl mx-auto px-6 lg:px-10">
+            <div className="mb-16">
+              <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-4 block">
+                § 02 · How It Works
+              </span>
+              <h2 className="font-display text-4xl md:text-5xl font-light text-stone-900 max-w-xl leading-tight">
+                Three steps between you and a costly mistake
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[
+                { n: "01", icon: Search, title: "Search an address", desc: "Enter any address in a covered city. We instantly pull the city's live permit database — the same public records title companies use, but made readable." },
+                { n: "02", icon: Shield, title: "We analyze the risk", desc: "Our engine reads every permit, flags what's open or unpermitted, checks the contractors who worked on it, and estimates the real cost to fix it." },
+                { n: "03", icon: Scale, title: "You decide, with leverage", desc: "Get a clear risk score, a plain-English breakdown, and a negotiation brief for your agent. Walk away — or knock thousands off the price." },
+              ].map((s, i) => (
+                <div key={i} className="border border-stone-900/10 rounded-lg p-9 bg-white flex flex-col">
+                  <div className="flex items-start justify-between mb-7">
+                    <div className="w-12 h-12 flex items-center justify-center border border-stone-900/10 rounded-md">
+                      <s.icon size={20} strokeWidth={1.5} />
+                    </div>
+                    <span className="font-display text-4xl font-light text-stone-200">{s.n}</span>
+                  </div>
+                  <h3 className="font-display text-2xl font-light mb-3">{s.title}</h3>
+                  <p className="font-serif text-stone-600 leading-relaxed">{s.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* WHAT YOU GET */}
+        <section className="py-28 border-t border-stone-900/10 bg-white/50">
+          <div className="max-w-7xl mx-auto px-6 lg:px-10">
+            <div className="mb-16 max-w-2xl">
+              <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-4 block">
+                § 03 · What You Get
+              </span>
+              <h2 className="font-display text-4xl md:text-5xl font-light text-stone-900 leading-tight mb-5">
+                A complete dossier on the property
+              </h2>
+              <p className="font-serif text-lg text-stone-600 leading-relaxed">
+                Not raw data — answers. Every part of the report is built to change a decision or prevent a loss.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-stone-900/10 border border-stone-900/10">
+              {[
+                { icon: Shield, title: "Property Risk Score", desc: "One glanceable score, 0 to 100, summarizing the property's permit risk — know in seconds if it's worth a closer look." },
+                { icon: Calendar, title: "Property Timeline", desc: "Every permit plotted in time — built, renovated, re-roofed, and every item still left open and unresolved." },
+                { icon: HardHat, title: "Contractor Track Record", desc: "We check who did the work and how it went — license status plus their real permit history of violations and abandoned jobs.", exclusive: true },
+                { icon: FileWarning, title: "Unpermitted Work Detector", desc: "We reconcile the listing's square footage against permitted work to flag likely illegal additions or conversions." },
+                { icon: Scale, title: "Remediation Cost + Brief", desc: "The real dollar cost to clear every open item, plus a one-page negotiation brief your agent can act on." },
+                { icon: CheckCircle2, title: "Plain-English Decoder", desc: "No cryptic codes. Every permit translated into language you actually understand, with why it matters." },
+              ].map((f, i) => (
+                <div key={i} className="bg-stone-50 p-9 flex flex-col">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="w-10 h-10 flex items-center justify-center border border-stone-900/10 rounded-md">
+                      <f.icon size={18} strokeWidth={1.5} />
+                    </div>
+                    {f.exclusive && (
+                      <span className="font-mono text-[9px] uppercase tracking-[0.1em] bg-stone-900 text-stone-50 px-2 py-1 rounded-sm">Exclusive</span>
+                    )}
+                  </div>
+                  <h3 className="font-display text-2xl font-light mb-3">{f.title}</h3>
+                  <p className="font-serif text-stone-600 leading-relaxed text-[15px]">{f.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* USE CASES */}
         <section className="py-28 border-t border-stone-900/10">
           <div className="max-w-7xl mx-auto px-6 lg:px-10">
             <div className="mb-16">
               <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-4 block">
-                § 02 · Use Cases
+                § 04 · Use Cases
               </span>
               <h2 className="font-display text-4xl md:text-5xl font-light text-stone-900 max-w-lg leading-tight">
                 Three reasons people search a permit
@@ -90,7 +164,7 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-6 lg:px-10">
             <div className="mb-16">
               <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-4 block">
-                § 03 · Coverage
+                § 05 · Coverage
               </span>
               <h2 className="font-display text-4xl md:text-5xl font-light text-stone-900 leading-tight">
                 National Database
@@ -119,12 +193,12 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* PRICING (monochrome) */}
+        {/* PRICING */}
         <section id="pricing" className="py-28 border-t border-stone-900/10 bg-stone-100/40">
           <div className="max-w-7xl mx-auto px-6 lg:px-10">
             <div className="text-center mb-16">
               <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-4 block">
-                § 04 · Pricing
+                § 06 · Pricing
               </span>
               <h2 className="font-display text-4xl md:text-5xl font-light text-stone-900 leading-tight">
                 Access public history
