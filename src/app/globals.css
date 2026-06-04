@@ -18,9 +18,9 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-  @apply font-display font-light;
-  font-variation-settings: "WONK" 0, "SOFT" 0;
-}
+    @apply font-display font-light;
+    font-variation-settings: "WONK" 0, "SOFT" 0;
+  }
 }
 
 @layer components {
