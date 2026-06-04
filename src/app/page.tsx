@@ -5,7 +5,7 @@ import HeroDemo from "@/components/HeroDemo";
 import CoverageMap from "@/components/CoverageMap";
 import PropertyTimeline from "@/components/PropertyTimeline";
 import { CITIES_LIST } from "@/lib/cities";
-import { Home, ShieldCheck, Eye, ArrowRight, CheckCircle2, Search, Shield, Scale, Calendar, HardHat, FileWarning } from "lucide-react";
+import { Home, ShieldCheck, Eye, ArrowRight, CheckCircle2, Search, Shield, Scale, Calendar, HardHat, FileWarning, Building2, DollarSign } from "lucide-react";
 import Link from "next/link";
 
 export default function HomePage() {
@@ -51,6 +51,36 @@ export default function HomePage() {
                 <div key={i} className={`py-8 px-6 ${i === 0 ? "" : "border-l border-stone-900/10"} ${i === 2 ? "border-l-0 md:border-l" : ""}`}>
                   <div className="font-display font-light text-stone-900 leading-none" style={{ fontSize: "clamp(2rem,3vw,2.6rem)" }}>{s[0]}</div>
                   <div className="font-mono text-[11px] uppercase tracking-[0.14em] text-stone-500 mt-3">{s[1]}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* THE PROBLEM */}
+        <section className="py-28 border-t border-stone-900/10 bg-stone-100/40">
+          <div className="max-w-7xl mx-auto px-6 lg:px-10">
+            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-4 block">
+              § 01 · The Problem
+            </span>
+            <h2 className="font-display text-4xl md:text-5xl font-light text-stone-900 max-w-3xl leading-tight">
+              Roughly <span className="italic">1 in 3 homes</span> hides work that was never permitted, inspected, or closed.
+            </h2>
+            <p className="font-serif text-lg text-stone-600 max-w-2xl mt-6 leading-relaxed">
+              The data is public — but buried in cryptic city databases, written in codes like &ldquo;EW&rdquo; and &ldquo;A2,&rdquo; and nobody hands it to you before you fall in love with a house. Then the title company calls two weeks before closing.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-stone-900/10 border border-stone-900/10 mt-14">
+              {[
+                { icon: FileWarning, title: "Open permits", desc: "Work started but never inspected to completion — can delay or kill your closing." },
+                { icon: Building2, title: "Unpermitted additions", desc: "That finished basement may be illegal square footage you inherit." },
+                { icon: HardHat, title: "Bad contractors", desc: "The pros who worked on it may have a trail of violations and abandoned jobs." },
+                { icon: DollarSign, title: "Surprise costs", desc: "Retroactive fees, re-inspections, and corrections routinely run $10k–$50k+." },
+              ].map((x, i) => (
+                <div key={i} className="bg-stone-50 p-8 flex flex-col">
+                  <x.icon size={20} strokeWidth={1.5} className="mb-5" />
+                  <h3 className="font-display text-2xl font-light mb-3">{x.title}</h3>
+                  <p className="font-serif text-stone-600 leading-relaxed text-[15px]">{x.desc}</p>
                 </div>
               ))}
             </div>
@@ -257,6 +287,21 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* FINAL CTA */}
+        <section className="py-32 border-t border-stone-900/10 text-center">
+          <div className="max-w-7xl mx-auto px-6 lg:px-10">
+            <span className="font-mono text-[12px] uppercase tracking-[0.22em] text-stone-500 mb-6 block">
+              The 30 seconds that saves you $40,000
+            </span>
+            <h2 className="font-display font-light text-stone-900 leading-[1.05] tracking-[-0.02em] max-w-3xl mx-auto mb-9" style={{ fontSize: "clamp(2.25rem, 4.5vw, 4rem)" }}>
+              Don&rsquo;t fall in love with a house before you know its <span className="italic">secrets.</span>
+            </h2>
+            <a href="#" className="inline-flex items-center gap-2.5 bg-stone-900 text-stone-50 px-9 py-4 rounded-md font-mono text-[13px] uppercase tracking-[0.12em] hover:bg-stone-800 transition-colors">
+              Search a property <ArrowRight size={16} />
+            </a>
           </div>
         </section>
       </main>
