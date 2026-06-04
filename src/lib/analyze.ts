@@ -1,6 +1,5 @@
 // src/lib/analyze.ts
-// Risk analysis engine + permit code translation + accurate totals
-// REPLACE your entire src/lib/analyze.ts with this file
+// Risk analysis engine + permit code translation + accurate totals + numeric score
 
 import type { Permit } from "./socrata";
 
@@ -45,8 +44,10 @@ export function translatePermitType(code: string): string {
 }
 
 // ═══════════════════════════════════════════════════════════
-// RISK ANALYSIS — now supports accurate totalCount
+// RISK ANALYSIS — now supports accurate totalCount + numeric score
 // ═══════════════════════════════════════════════════════════
+
+export type RiskScore = "clean" | "review" | "risk";
 
 export interface Flag {
   level: "high" | "med" | "low";
@@ -54,8 +55,8 @@ export interface Flag {
 }
 
 export interface Stats {
-  total: number;       // The ACTUAL total in the database
-  showing: number;     // How many we're showing (≤ 50)
+  total: number;
+  showing: number;
   open: number;
   expired: number;
   finaled: number;
@@ -66,7 +67,8 @@ export interface Stats {
 }
 
 export interface Analysis {
-  score: "clean" | "review" | "risk";
+  score: RiskScore;
+  scoreValue: number;   // NEW: 0–100 numeric score (higher = safer)
   flags: Flag[];
   summary: string;
   openCount: number;
@@ -74,12 +76,7 @@ export interface Analysis {
   stats: Stats;
 }
 
-/**
- * Analyze a sample of permits. If totalCount is provided, it's used
- * as the "true" total (since we may only have 50 of N permits loaded).
- */
 export function analyzePermits(permits: Permit[], totalCount?: number): Analysis {
-  // Use real total if provided, otherwise fall back to array length
   const total = totalCount !== undefined ? totalCount : permits.length;
 
   const stats: Stats = {
@@ -97,6 +94,7 @@ export function analyzePermits(permits: Permit[], totalCount?: number): Analysis
   if (!permits.length) {
     return {
       score: "clean",
+      scoreValue: 50, // unknown / no data
       flags: [],
       summary: "No permits found on record.",
       openCount: 0,
@@ -124,8 +122,6 @@ export function analyzePermits(permits: Permit[], totalCount?: number): Analysis
     if (!isNaN(v)) stats.totalValue += v;
   });
 
-  // Scale the counts proportionally if we're sampling a subset
-  // This gives a more accurate sense of overall property history
   const samplingRatio = stats.showing > 0 ? total / stats.showing : 1;
   const isSubset = total > stats.showing;
 
@@ -165,13 +161,21 @@ export function analyzePermits(permits: Permit[], totalCount?: number): Analysis
     });
   }
 
-  const score: Analysis["score"] = flags.some(f => f.level === "high")
+  const score: RiskScore = flags.some(f => f.level === "high")
     ? "risk"
     : flags.length > 0
       ? "review"
       : "clean";
 
-  // Build summary text
+  // ─── NEW: numeric 0–100 score (higher = safer) ───
+  // Starts at 100, deducts for risk signals. Mirrors the homepage gauge.
+  let scoreValue = 100;
+  scoreValue -= Math.min(stats.open * 6, 45);        // open permits hurt most
+  scoreValue -= Math.min(stats.expired * 4, 20);     // expired permits
+  scoreValue -= Math.min(stats.electrical * 2, 12);  // heavy electrical history
+  scoreValue -= Math.min(stats.structural * 2, 12);  // structural/renovation
+  scoreValue = Math.max(8, Math.min(100, Math.round(scoreValue)));
+
   let summary: string;
   if (isSubset) {
     summary = `${total.toLocaleString()} total permits on record. Showing the ${stats.showing} most recent. ${stats.open} open in this sample.`;
@@ -181,6 +185,7 @@ export function analyzePermits(permits: Permit[], totalCount?: number): Analysis
 
   return {
     score,
+    scoreValue,
     flags,
     summary,
     openCount: stats.open,
