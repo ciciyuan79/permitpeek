@@ -14,12 +14,13 @@
 @layer base {
   body {
     @apply bg-stone-50 text-stone-900 font-serif;
-    font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+    font-feature-settings: "cv01", "cv02";
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display font-light;
-  }
+  @apply font-display font-light;
+  font-variation-settings: "WONK" 0, "SOFT" 0;
+}
 }
 
 @layer components {
