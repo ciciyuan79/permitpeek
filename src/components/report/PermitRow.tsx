@@ -71,7 +71,6 @@ export default function PermitRow({ permit, index }: PermitRowProps) {
             </p>
           )}
 
-          {/* Knowledge Layer — What this permit type means */}
           {knowledge && (
             <div className="mb-6 p-5 bg-stone-50 border-l-2 border-stone-900/20">
               <div className="font-mono text-[9px] uppercase tracking-widest text-stone-500 mb-2">
