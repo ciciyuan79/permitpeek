@@ -14,6 +14,7 @@ export interface Permit {
   value: string;
   description: string;
   address: string;
+  contractor: string;
 }
 
 export interface PermitSearchResult {
@@ -271,6 +272,17 @@ export async function fetchPermitsWithCount(
   const { permits: rawResults, total } = await searchWithFallbacks(city, parsed);
 
   const permits: Permit[] = rawResults.map((item: Record<string, string>, index: number) => ({
+    id: item.id || `permit-${index}`,
+    type: item[typeField] || "Unknown",
+    date: item[dateField] || "",
+    status: item[statusField] || "Unknown",
+    value: item[valueField] || "0",
+    description: item[descField] || "No description provided",
+    address: streetField
+      ? `${item[addressField] || ""} ${item[streetField] || ""}`.trim()
+      : item[addressField] || "",
+    contractor: (city.contractorField && item[city.contractorField]) ? item[city.contractorField] : "",
+  }));
     id: item.id || `permit-${index}`,
     type: item[typeField] || "Unknown",
     date: item[dateField] || "",
