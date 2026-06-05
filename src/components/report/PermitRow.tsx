@@ -22,6 +22,11 @@ export default function PermitRow({ permit, index }: PermitRowProps) {
     !isNaN(Number(permit.value)) &&
     Number(permit.value) > 0;
 
+  const hasContractor =
+    permit.contractor &&
+    permit.contractor.trim().length > 1 &&
+    permit.contractor.toLowerCase() !== "unknown";
+
   const isOpenStatus =
     permit.status.toLowerCase().includes("issued") ||
     permit.status.toLowerCase().includes("open") ||
@@ -89,6 +94,16 @@ export default function PermitRow({ permit, index }: PermitRowProps) {
           )}
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-stone-900/5">
+            {hasContractor && (
+              <div>
+                <div className="font-mono text-[9px] uppercase tracking-widest text-stone-400 mb-1">
+                  Contractor / Filer
+                </div>
+                <div className="font-serif text-sm text-stone-900">
+                  {permit.contractor}
+                </div>
+              </div>
+            )}
             <div>
               <div className="font-mono text-[9px] uppercase tracking-widest text-stone-400 mb-1">
                 Valuation
