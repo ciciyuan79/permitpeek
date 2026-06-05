@@ -28,7 +28,7 @@ export default function HomePage() {
                 <p className="font-serif text-lg md:text-xl text-stone-600 max-w-md mb-7 md:mb-8 reveal stagger-2">
                   Before the biggest purchase of your life, uncover its permit history, hidden renovations, unpermitted work, and the real cost of what&rsquo;s wrong — straight from official US records.
                 </p>
-                <div className="reveal stagger-3">
+                <div id="search" className="reveal stagger-3 scroll-mt-24">
                   <SearchCard />
                 </div>
               </div>
