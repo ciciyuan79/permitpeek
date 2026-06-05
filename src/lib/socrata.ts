@@ -24,7 +24,7 @@ export interface PermitSearchResult {
 }
 
 // ═══════════════════════════════════════════════════════════
-// ADDRESS NORMALIZATION (same as before)
+// ADDRESS NORMALIZATION
 // ═══════════════════════════════════════════════════════════
 
 function stripLocationSuffix(address: string): string {
@@ -102,12 +102,9 @@ function esc(s: string): string {
 }
 
 // ═══════════════════════════════════════════════════════════
-// QUERY EXECUTION — supports both detail and count queries
+// QUERY EXECUTION
 // ═══════════════════════════════════════════════════════════
 
-/**
- * Build the WHERE clause for a query. Returns null if no valid query is possible.
- */
 function buildWhereClauses(city: CityConfig, parsed: ParsedAddress): string[] {
   const { addressField, streetField } = city;
   const strategies: string[] = [];
@@ -162,9 +159,6 @@ function buildWhereClauses(city: CityConfig, parsed: ParsedAddress): string[] {
   return strategies;
 }
 
-/**
- * Run a count query for a given WHERE clause.
- */
 async function countQuery(city: CityConfig, where: string): Promise<number> {
   const { endpoint } = city;
   const params = new URLSearchParams({
@@ -184,9 +178,6 @@ async function countQuery(city: CityConfig, where: string): Promise<number> {
   }
 }
 
-/**
- * Run a detail query for a given WHERE clause.
- */
 async function detailQuery(
   city: CityConfig,
   where: string,
@@ -221,10 +212,8 @@ async function searchWithFallbacks(
   const strategies = buildWhereClauses(city, parsed);
 
   for (const where of strategies) {
-    // First get count to see if this strategy yields results
     const total = await countQuery(city, where);
     if (total > 0) {
-      // We found a match — fetch the top 50 for display
       const permits = await detailQuery(city, where, 50);
       return { where, permits, total };
     }
@@ -234,7 +223,7 @@ async function searchWithFallbacks(
 }
 
 // ═══════════════════════════════════════════════════════════
-// MAIN EXPORT
+// MAIN EXPORTS
 // ═══════════════════════════════════════════════════════════
 
 export async function fetchPermits(
@@ -245,10 +234,6 @@ export async function fetchPermits(
   return result.permits;
 }
 
-/**
- * Enhanced version that returns both display permits AND accurate total count.
- * Use this for the report page to show truthful totals.
- */
 export async function fetchPermitsWithCount(
   city: CityConfig,
   address: string
@@ -282,16 +267,6 @@ export async function fetchPermitsWithCount(
       ? `${item[addressField] || ""} ${item[streetField] || ""}`.trim()
       : item[addressField] || "",
     contractor: (city.contractorField && item[city.contractorField]) ? item[city.contractorField] : "",
-  }));
-    id: item.id || `permit-${index}`,
-    type: item[typeField] || "Unknown",
-    date: item[dateField] || "",
-    status: item[statusField] || "Unknown",
-    value: item[valueField] || "0",
-    description: item[descField] || "No description provided",
-    address: streetField
-      ? `${item[addressField] || ""} ${item[streetField] || ""}`.trim()
-      : item[addressField] || "",
   }));
 
   return {
