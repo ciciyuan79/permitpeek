@@ -1,15 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { Building2, Search } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
+import { Search } from "lucide-react";
 
 export default function Nav() {
-  const scrollToSearch = () => {
-    const el = document.getElementById("search");
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const goToSearch = () => {
+    if (pathname === "/") {
+      const el = document.getElementById("search");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
     } else {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      router.push("/#search");
     }
   };
 
@@ -19,7 +27,16 @@ export default function Nav() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5">
           <span className="w-8 h-8 bg-stone-900 rounded-md flex items-center justify-center flex-shrink-0">
-            <Building2 size={17} className="text-stone-50" strokeWidth={1.6} />
+            <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
+              <path
+                d="M10 26 L24 12 L38 26 M24 22 C18 26 18 33 24 33 C30 33 30 40 24 40 C18 40 18 33 24 33 C30 33 30 26 24 22 Z"
+                fill="none"
+                stroke="#faf9f7"
+                strokeWidth="2.2"
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
+            </svg>
           </span>
           <span className="font-display text-xl font-medium tracking-[-0.01em] text-stone-900">
             PermitPeek
@@ -33,8 +50,9 @@ export default function Nav() {
           <Link href="/#coverage" className="hover:text-stone-900 hover-underline pb-0.5">Coverage</Link>
           <Link href="/faq" className="hover:text-stone-900 hover-underline pb-0.5">FAQ</Link>
           <button
-            onClick={scrollToSearch}
-            className="bg-stone-900 text-stone-50 px-4 py-2 rounded-md tracking-[0.1em] hover:bg-stone-800 transition-colors"
+            type="button"
+            onClick={goToSearch}
+            className="bg-stone-900 text-stone-50 px-4 py-2 rounded-md tracking-[0.1em] hover:bg-stone-800 transition-colors cursor-pointer"
           >
             Search a property
           </button>
@@ -42,8 +60,9 @@ export default function Nav() {
 
         {/* Mobile search button */}
         <button
-          onClick={scrollToSearch}
-          className="md:hidden inline-flex items-center gap-2 bg-stone-900 text-stone-50 px-4 py-2.5 rounded-md font-mono text-[11px] uppercase tracking-[0.12em] hover:bg-stone-800 transition-colors flex-shrink-0"
+          type="button"
+          onClick={goToSearch}
+          className="md:hidden inline-flex items-center gap-2 bg-stone-900 text-stone-50 px-4 py-2.5 rounded-md font-mono text-[11px] uppercase tracking-[0.12em] hover:bg-stone-800 transition-colors flex-shrink-0 cursor-pointer active:scale-95"
           aria-label="Search a property"
         >
           <Search size={15} strokeWidth={2} />
