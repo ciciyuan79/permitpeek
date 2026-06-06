@@ -88,7 +88,7 @@ export default function HomePage() {
         </section>
 
         {/* HOW IT WORKS */}
-        <section className="py-16 md:py-28 border-t border-stone-900/10">
+        <section id="how" className="py-16 md:py-28 border-t border-stone-900/10 scroll-mt-20">
           <div className="max-w-7xl mx-auto px-6 lg:px-10">
             <div className="mb-10 md:mb-16">
               <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-4 block">
@@ -121,7 +121,7 @@ export default function HomePage() {
         </section>
 
         {/* WHAT YOU GET */}
-        <section className="py-16 md:py-28 border-t border-stone-900/10 bg-white/50">
+        <section id="features" className="py-16 md:py-28 border-t border-stone-900/10 bg-white/50 scroll-mt-20">
           <div className="max-w-7xl mx-auto px-6 lg:px-10">
             <div className="mb-10 md:mb-16 max-w-2xl">
               <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-4 block">
@@ -202,7 +202,7 @@ export default function HomePage() {
         </section>
 
         {/* COVERAGE */}
-        <section className="py-16 md:py-28 border-t border-stone-900/10 bg-white/50">
+        <section id="coverage" className="py-16 md:py-28 border-t border-stone-900/10 bg-white/50 scroll-mt-20">
           <div className="max-w-7xl mx-auto px-6 lg:px-10">
             <div className="mb-8 md:mb-12">
               <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-4 block">
@@ -240,7 +240,7 @@ export default function HomePage() {
         </section>
 
         {/* PRICING */}
-        <section id="pricing" className="py-16 md:py-28 border-t border-stone-900/10 bg-stone-100/40">
+        <section id="pricing" className="py-16 md:py-28 border-t border-stone-900/10 bg-stone-100/40 scroll-mt-20">
           <div className="max-w-7xl mx-auto px-6 lg:px-10">
             <div className="text-center mb-10 md:mb-16">
               <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-4 block">
@@ -299,7 +299,7 @@ export default function HomePage() {
             <h2 className="font-display font-light text-stone-900 leading-[1.05] tracking-[-0.02em] max-w-3xl mx-auto mb-8 md:mb-9" style={{ fontSize: "clamp(2rem, 4.5vw, 4rem)" }}>
               Don&rsquo;t fall in love with a house before you know its <span className="italic">secrets.</span>
             </h2>
-            <a href="#" className="inline-flex items-center gap-2.5 bg-stone-900 text-stone-50 px-9 py-4 rounded-md font-mono text-[13px] uppercase tracking-[0.12em] hover:bg-stone-800 transition-colors">
+            <a href="#search" className="inline-flex items-center gap-2.5 bg-stone-900 text-stone-50 px-9 py-4 rounded-md font-mono text-[13px] uppercase tracking-[0.12em] hover:bg-stone-800 transition-colors">
               Search a property <ArrowRight size={16} />
             </a>
           </div>
