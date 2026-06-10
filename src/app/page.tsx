@@ -253,17 +253,22 @@ export default function HomePage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
-                { title: "Free Search", price: "$0", period: "Per address", features: ["First 2 permits", "Basic address check", "Risk score indicator", "No credit card"], cta: "Search Now", highlight: false },
-                { title: "Full Report", price: "$9", period: "One-time", features: ["Unlimited permits", "Detailed descriptions", "Contractor details", "PDF Download"], cta: "Unlock Report", highlight: true },
-                { title: "Address Watch", price: "$19", period: "Per month", features: ["Monitor 5 addresses", "Instant email alerts", "Monthly local digest", "Priority support"], cta: "Subscribe Now", highlight: false },
+                { title: "Free Search", price: "$0", period: "Per address", features: ["First 2 permits", "Basic address check", "Risk score indicator", "No credit card"], cta: "Search Now", highlight: false, comingSoon: false },
+                { title: "Full Report", price: "$9", period: "One-time", features: ["Unlimited permits", "Detailed descriptions", "Contractor details", "PDF Download"], cta: "Unlock Report", highlight: true, comingSoon: false },
+                { title: "Address Watch", price: "$19", period: "Per month", features: ["Monitor 5 addresses", "Instant email alerts", "Monthly local digest", "Priority support"], cta: "Coming Soon", highlight: false, comingSoon: true },
               ].map((plan, i) => (
                 <div
                   key={i}
-                  className={`relative p-8 md:p-10 rounded-sm flex flex-col bg-white ${plan.highlight ? "border border-stone-900 shadow-[0_24px_50px_-20px_rgba(28,25,23,0.18)]" : "border border-stone-900/10"}`}
+                  className={`relative p-8 md:p-10 rounded-sm flex flex-col bg-white ${plan.highlight ? "border border-stone-900 shadow-[0_24px_50px_-20px_rgba(28,25,23,0.18)]" : "border border-stone-900/10"} ${plan.comingSoon ? "opacity-75" : ""}`}
                 >
                   {plan.highlight && (
                     <span className="absolute top-6 right-6 font-mono text-[9px] uppercase tracking-[0.1em] bg-stone-900 text-stone-50 px-2.5 py-1 rounded-sm">
                       Most Popular
+                    </span>
+                  )}
+                  {plan.comingSoon && (
+                    <span className="absolute top-6 right-6 font-mono text-[9px] uppercase tracking-[0.1em] border border-stone-900/20 text-stone-500 px-2.5 py-1 rounded-sm">
+                      Soon
                     </span>
                   )}
                   <h3 className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-8">{plan.title}</h3>
@@ -280,7 +285,8 @@ export default function HomePage() {
                     ))}
                   </ul>
                   <button
-                    className={`w-full py-4 text-sm uppercase tracking-widest font-mono rounded-[2px] border border-stone-900 transition-colors ${plan.highlight ? "bg-stone-900 text-stone-50 hover:bg-stone-800" : "bg-white text-stone-900 hover:bg-stone-900/5"}`}
+                    disabled={plan.comingSoon}
+                    className={`w-full py-4 text-sm uppercase tracking-widest font-mono rounded-[2px] border transition-colors ${plan.comingSoon ? "border-stone-900/20 text-stone-400 cursor-not-allowed" : plan.highlight ? "bg-stone-900 text-stone-50 border-stone-900 hover:bg-stone-800" : "bg-white text-stone-900 border-stone-900 hover:bg-stone-900/5"}`}
                   >
                     {plan.cta}
                   </button>
