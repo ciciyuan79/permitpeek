@@ -12,7 +12,6 @@ function getResend() {
 export async function POST(request: NextRequest) {
   try {
     const { email, city, address } = await request.json();
-
     if (!email || !email.includes("@")) {
       return NextResponse.json(
         { error: "Valid email required" },
@@ -25,32 +24,33 @@ export async function POST(request: NextRequest) {
 
     // Dev fallback when no API key set
     if (!resend) {
-      console.log(`[DEV] Subscription: ${email} for ${city}/${address}`);
+      console.log(`[DEV] Lead captured: ${email} for ${city}/${address}`);
       return NextResponse.json({ success: true, dev: true });
     }
 
     await resend.emails.send({
       from: "PermitPeek <onboarding@resend.dev>",
       to: email,
-      subject: `Your permit report: ${address}`,
+      subject: `Your saved property: ${address}`,
       html: `
         <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; padding: 24px;">
           <h1 style="font-size: 28px; font-weight: 300; color: #1c1917;">
-            Your PermitPeek report is ready
+            Your property is saved
           </h1>
           <p style="font-size: 16px; line-height: 1.6; color: #44403c;">
-            Thanks for using PermitPeek. Your full report for
-            <strong>${address}</strong> in ${city} is now unlocked.
+            Here's the link back to the permit report for
+            <strong>${address}</strong> in ${city}. When you're ready, unlock the full report
+            to see every permit, the complete risk analysis, and contractor details.
           </p>
           <p style="margin: 32px 0;">
-            <a href="${baseUrl}/report?city=${city}&address=${encodeURIComponent(address)}&unlocked=true"
+            <a href="${baseUrl}/report?city=${city}&address=${encodeURIComponent(address)}"
                style="background: #1c1917; color: white; padding: 12px 24px; text-decoration: none; display: inline-block;">
-              View Full Report →
+              View &amp; Unlock Report →
             </a>
           </p>
           <hr style="margin: 32px 0; border: none; border-top: 1px solid #ddd;" />
           <p style="color: #78716c; font-size: 13px;">
-            You'll get our weekly digest of new permits in your area. Unsubscribe anytime.
+            You'll occasionally get useful property insights from PermitPeek. Unsubscribe anytime.
           </p>
         </div>
       `,
