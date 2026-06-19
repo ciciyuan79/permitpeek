@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     await resend.emails.send({
-      from: "PermitPeek <onboarding@resend.dev>",
+      from: "PermitPeek <reports@citypermitpeek.com>",
       to: email,
       subject: `Your saved property: ${address}`,
       html: `
