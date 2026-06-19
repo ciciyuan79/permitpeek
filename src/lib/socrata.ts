@@ -1,8 +1,8 @@
 // src/lib/socrata.ts
 //
 // Smart permit search with accurate total count + recent 50 detail.
-// Matching tightened: requires house number AND street to match,
-// so a wrong-city/vague address returns "no results" instead of mis-matching.
+// Matching: requires house number AND street keyword (city-safe),
+// but tolerant of address formatting differences (good recall).
 
 import { CityConfig } from "./cities";
 
@@ -68,7 +68,7 @@ function extractStreetKeyword(streetParts: string[]): string {
     .filter(p => p && !directionWords.has(p) && !streetTypes.has(p));
 
   if (meaningful.length === 0) {
-    return streetParts.join(" ").toUpperCase();
+    return streetParts.join(" ").toUpperCase().replace(/[^\w\s]/g, "").trim();
   }
 
   return stripOrdinal(meaningful[0]);
@@ -101,48 +101,51 @@ function esc(s: string): string {
   return s.replace(/'/g, "''");
 }
 
-// Clean up values that come wrapped in literal quote characters
-// (e.g. Cincinnati's companyname = "\"PARADIGM CONSTRUCTION LLC\"")
+// Strip wrapping quote characters some portals include in values
+// (e.g. Cincinnati companyname = "\"PARADIGM CONSTRUCTION LLC\"")
 function cleanValue(v: string): string {
   return (v || "").replace(/^"+|"+$/g, "").trim();
 }
 
 // ═══════════════════════════════════════════════════════════
-// QUERY EXECUTION — TIGHTENED MATCHING
-// Requires house number AND street. No loose "house-only" or
-// "street-only" fallbacks (those returned the wrong property/city).
+// QUERY EXECUTION
+// City-safe (always requires house number AND street keyword),
+// but tolerant of formatting (matches both as substrings, any order).
 // ═══════════════════════════════════════════════════════════
 
 function buildWhereClauses(city: CityConfig, parsed: ParsedAddress): string[] {
   const { addressField, streetField } = city;
   const strategies: string[] = [];
 
-  if (!parsed.houseNumber) {
+  const house = esc(parsed.houseNumber);
+  const keyword = esc(parsed.streetKeyword);
+
+  // Need both a house number and a street keyword to search safely.
+  if (!parsed.houseNumber || !parsed.streetKeyword) {
     return strategies;
   }
 
   if (!streetField) {
-    if (!parsed.streetKeyword) {
-      return strategies;
-    }
-    if (parsed.fullCleaned) {
-      strategies.push(
-        `upper(${addressField}) like '%${esc(parsed.fullCleaned.toUpperCase())}%'`
-      );
-    }
+    // Single-field cities (address field holds the whole address).
+    // 1) house + street in order (most precise)
     strategies.push(
-      `upper(${addressField}) like '%${esc(parsed.houseNumber)}%${esc(parsed.streetKeyword)}%'`
+      `upper(${addressField}) like '%${house}%${keyword}%'`
+    );
+    // 2) house AND street both present, any order (robust to formatting:
+    //    handles SOUTH vs S, AVENUE vs AVE, ranges, extra spacing, etc.)
+    strategies.push(
+      `upper(${addressField}) like '%${house}%' AND upper(${addressField}) like '%${keyword}%'`
     );
     return strategies;
   }
 
-  // Two-field cities: require EXACT house number AND a street match.
-  if (parsed.streetKeyword) {
-    strategies.push(
-      `${addressField}='${esc(parsed.houseNumber)}' AND upper(${streetField}) like '%${esc(parsed.streetKeyword)}%'`
-    );
-  }
+  // Two-field cities.
+  // 1) exact house number + street keyword (most precise)
+  strategies.push(
+    `${addressField}='${house}' AND upper(${streetField}) like '%${keyword}%'`
+  );
 
+  // 2) exact house + each meaningful street part
   if (parsed.streetParts.length > 1) {
     const partsConditions = parsed.streetParts
       .map(p => p.toUpperCase().replace(/[^\w]/g, ""))
@@ -151,10 +154,16 @@ function buildWhereClauses(city: CityConfig, parsed: ParsedAddress): string[] {
 
     if (partsConditions.length > 0) {
       strategies.push(
-        `${addressField}='${esc(parsed.houseNumber)}' AND ${partsConditions.join(" AND ")}`
+        `${addressField}='${house}' AND ${partsConditions.join(" AND ")}`
       );
     }
   }
+
+  // 3) house contained (not exact) + street keyword — still requires BOTH,
+  //    so it stays city-safe but tolerates house fields with suffixes/ranges.
+  strategies.push(
+    `upper(${addressField}) like '%${house}%' AND upper(${streetField}) like '%${keyword}%'`
+  );
 
   return strategies;
 }
@@ -187,8 +196,10 @@ async function detailQuery(
   const params = new URLSearchParams({
     $where: where,
     $limit: limit.toString(),
-    $order: `${dateField} DESC`,
   });
+  if (dateField) {
+    params.set("$order", `${dateField} DESC`);
+  }
 
   try {
     const response = await fetch(`${endpoint}?${params.toString()}`, {
@@ -215,6 +226,8 @@ async function searchWithFallbacks(
     const total = await countQuery(city, where);
     if (total > 0) {
       const permits = await detailQuery(city, where, 50);
+      // Guard: if count says results but detail came back empty
+      // (e.g. ordering field issue), still return the count.
       return { where, permits, total };
     }
   }
@@ -252,7 +265,6 @@ export async function fetchPermitsWithCount(
 
   const parsed = parseAddress(address);
 
-  // Require BOTH a house number and a street — prevents vague/wrong matches.
   if (!parsed.houseNumber || !parsed.streetKeyword) {
     return { permits: [], totalCount: 0, showingCount: 0 };
   }
@@ -260,7 +272,6 @@ export async function fetchPermitsWithCount(
   const { permits: rawResults, total } = await searchWithFallbacks(city, parsed);
 
   const permits: Permit[] = rawResults.map((item: Record<string, string>, index: number) => {
-    // Contractor: prefer the permittee (contractor) field, fall back to owner.
     let contractor = "";
     if (permitteeField && item[permitteeField]) {
       contractor = cleanValue(item[permitteeField]);
