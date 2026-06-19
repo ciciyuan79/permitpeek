@@ -101,6 +101,12 @@ function esc(s: string): string {
   return s.replace(/'/g, "''");
 }
 
+// Clean up values that come wrapped in literal quote characters
+// (e.g. Cincinnati's companyname = "\"PARADIGM CONSTRUCTION LLC\"")
+function cleanValue(v: string): string {
+  return (v || "").replace(/^"+|"+$/g, "").trim();
+}
+
 // ═══════════════════════════════════════════════════════════
 // QUERY EXECUTION — TIGHTENED MATCHING
 // Requires house number AND street. No loose "house-only" or
@@ -111,40 +117,32 @@ function buildWhereClauses(city: CityConfig, parsed: ParsedAddress): string[] {
   const { addressField, streetField } = city;
   const strategies: string[] = [];
 
-  // A property lookup needs a house number. Without one, return no results.
   if (!parsed.houseNumber) {
     return strategies;
   }
 
   if (!streetField) {
-    // Single-field cities: the address field holds the full address.
-    // Require a street too — a house-number-only search is too vague.
     if (!parsed.streetKeyword) {
       return strategies;
     }
-    // Full address contains both house number + street.
     if (parsed.fullCleaned) {
       strategies.push(
         `upper(${addressField}) like '%${esc(parsed.fullCleaned.toUpperCase())}%'`
       );
     }
-    // House number AND street keyword both present in the field.
     strategies.push(
       `upper(${addressField}) like '%${esc(parsed.houseNumber)}%${esc(parsed.streetKeyword)}%'`
     );
     return strategies;
   }
 
-  // Two-field cities (NYC, etc.): require EXACT house number AND a street match.
-
-  // Strategy 1: exact house + fuzzy street keyword
+  // Two-field cities: require EXACT house number AND a street match.
   if (parsed.streetKeyword) {
     strategies.push(
       `${addressField}='${esc(parsed.houseNumber)}' AND upper(${streetField}) like '%${esc(parsed.streetKeyword)}%'`
     );
   }
 
-  // Strategy 2: exact house + each meaningful street part
   if (parsed.streetParts.length > 1) {
     const partsConditions = parsed.streetParts
       .map(p => p.toUpperCase().replace(/[^\w]/g, ""))
@@ -158,8 +156,6 @@ function buildWhereClauses(city: CityConfig, parsed: ParsedAddress): string[] {
     }
   }
 
-  // REMOVED: "house number only" and "street keyword only" fallbacks.
-  // They matched unrelated properties (and other cities' data).
   return strategies;
 }
 
@@ -250,6 +246,8 @@ export async function fetchPermitsWithCount(
     statusField,
     valueField,
     descField,
+    permitteeField,
+    ownerField,
   } = city;
 
   const parsed = parseAddress(address);
@@ -261,18 +259,28 @@ export async function fetchPermitsWithCount(
 
   const { permits: rawResults, total } = await searchWithFallbacks(city, parsed);
 
-  const permits: Permit[] = rawResults.map((item: Record<string, string>, index: number) => ({
-    id: item.id || `permit-${index}`,
-    type: item[typeField] || "Unknown",
-    date: item[dateField] || "",
-    status: item[statusField] || "Unknown",
-    value: item[valueField] || "0",
-    description: item[descField] || "No description provided",
-    address: streetField
-      ? `${item[addressField] || ""} ${item[streetField] || ""}`.trim()
-      : item[addressField] || "",
-    contractor: (city.contractorField && item[city.contractorField]) ? item[city.contractorField] : "",
-  }));
+  const permits: Permit[] = rawResults.map((item: Record<string, string>, index: number) => {
+    // Contractor: prefer the permittee (contractor) field, fall back to owner.
+    let contractor = "";
+    if (permitteeField && item[permitteeField]) {
+      contractor = cleanValue(item[permitteeField]);
+    } else if (ownerField && item[ownerField]) {
+      contractor = cleanValue(item[ownerField]);
+    }
+
+    return {
+      id: item.id || `permit-${index}`,
+      type: (typeField && item[typeField]) || "Unknown",
+      date: (dateField && item[dateField]) || "",
+      status: (statusField && item[statusField]) || "Unknown",
+      value: (valueField && item[valueField]) || "0",
+      description: (descField && item[descField]) || "No description provided",
+      address: streetField
+        ? `${item[addressField || ""] || ""} ${item[streetField] || ""}`.trim()
+        : item[addressField || ""] || "",
+      contractor,
+    };
+  });
 
   return {
     permits,
