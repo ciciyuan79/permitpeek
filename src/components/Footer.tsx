@@ -59,7 +59,7 @@ export default function Footer() {
             Company
           </h4>
           <ul className="space-y-3 font-serif text-sm text-stone-600">
-            <li><Link href="/faq" className="hover-underline hover:text-stone-900">FAQ</Link></li>
+            <li><Link href="/contact" className="hover-underline hover:text-stone-900">Contact</Link></li>
             <li><Link href="/terms" className="hover-underline hover:text-stone-900">Terms of Service</Link></li>
             <li><Link href="/privacy" className="hover-underline hover:text-stone-900">Privacy Policy</Link></li>
             <li><Link href="/data-policy" className="hover-underline hover:text-stone-900">Data Policy</Link></li>
