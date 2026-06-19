@@ -1,5 +1,5 @@
 // src/lib/cities.ts
-// Updated NYC field mappings + improved free tier reveal + Cincinnati added
+// NYC field mappings + Cincinnati added + Seattle fields corrected
 // Replace your current src/lib/cities.ts with this entire file
 
 export interface CityConfig {
@@ -130,11 +130,12 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     endpoint: "https://data.seattle.gov/resource/76t5-zqzr.json",
     addressField: "originaladdress1",
     streetField: null,
-    typeField: "permittype",
-    dateField: "appliedddate",
+    typeField: "permittypemapped",            // FIXED: was "permittype"
+    dateField: "issueddate",                   // FIXED: was "appliedddate" (didn't exist)
     statusField: "statuscurrent",
     valueField: "estprojectcost",
     descField: "description",
+    permitteeField: "contractorcompanyname",   // ADDED: contractor name
     totalPermits: "410k+",
     population: "750k",
     permitAuthority: "Seattle Department of Construction & Inspections",
