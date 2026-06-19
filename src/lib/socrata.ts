@@ -1,8 +1,8 @@
 // src/lib/socrata.ts
 //
 // Smart permit search with accurate total count + recent 50 detail.
-// Returns BOTH the real total (could be hundreds or thousands)
-// AND the top 50 recent permits for display.
+// Matching tightened: requires house number AND street to match,
+// so a wrong-city/vague address returns "no results" instead of mis-matching.
 
 import { CityConfig } from "./cities";
 
@@ -18,9 +18,9 @@ export interface Permit {
 }
 
 export interface PermitSearchResult {
-  permits: Permit[];      // Up to 50 most recent for display
-  totalCount: number;     // Actual count of all matching permits
-  showingCount: number;   // How many we're actually showing (≤ 50)
+  permits: Permit[];
+  totalCount: number;
+  showingCount: number;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -102,38 +102,50 @@ function esc(s: string): string {
 }
 
 // ═══════════════════════════════════════════════════════════
-// QUERY EXECUTION
+// QUERY EXECUTION — TIGHTENED MATCHING
+// Requires house number AND street. No loose "house-only" or
+// "street-only" fallbacks (those returned the wrong property/city).
 // ═══════════════════════════════════════════════════════════
 
 function buildWhereClauses(city: CityConfig, parsed: ParsedAddress): string[] {
   const { addressField, streetField } = city;
   const strategies: string[] = [];
 
-  if (!streetField) {
-    // Single-field cities
-    if (parsed.fullCleaned) {
-      strategies.push(`upper(${addressField}) like '%${esc(parsed.fullCleaned.toUpperCase())}%'`);
-    }
-    if (parsed.houseNumber && parsed.streetKeyword) {
-      strategies.push(`upper(${addressField}) like '%${esc(parsed.houseNumber)}%${esc(parsed.streetKeyword)}%'`);
-    }
-    if (parsed.streetKeyword) {
-      strategies.push(`upper(${addressField}) like '%${esc(parsed.streetKeyword)}%'`);
-    }
+  // A property lookup needs a house number. Without one, return no results.
+  if (!parsed.houseNumber) {
     return strategies;
   }
 
-  // Two-field cities (NYC, SF, Chicago, LA)
+  if (!streetField) {
+    // Single-field cities: the address field holds the full address.
+    // Require a street too — a house-number-only search is too vague.
+    if (!parsed.streetKeyword) {
+      return strategies;
+    }
+    // Full address contains both house number + street.
+    if (parsed.fullCleaned) {
+      strategies.push(
+        `upper(${addressField}) like '%${esc(parsed.fullCleaned.toUpperCase())}%'`
+      );
+    }
+    // House number AND street keyword both present in the field.
+    strategies.push(
+      `upper(${addressField}) like '%${esc(parsed.houseNumber)}%${esc(parsed.streetKeyword)}%'`
+    );
+    return strategies;
+  }
 
-  // Strategy 1: Exact house + fuzzy street keyword
-  if (parsed.houseNumber && parsed.streetKeyword) {
+  // Two-field cities (NYC, etc.): require EXACT house number AND a street match.
+
+  // Strategy 1: exact house + fuzzy street keyword
+  if (parsed.streetKeyword) {
     strategies.push(
       `${addressField}='${esc(parsed.houseNumber)}' AND upper(${streetField}) like '%${esc(parsed.streetKeyword)}%'`
     );
   }
 
-  // Strategy 2: Exact house + each street part
-  if (parsed.houseNumber && parsed.streetParts.length > 1) {
+  // Strategy 2: exact house + each meaningful street part
+  if (parsed.streetParts.length > 1) {
     const partsConditions = parsed.streetParts
       .map(p => p.toUpperCase().replace(/[^\w]/g, ""))
       .filter(p => p.length > 2 && !["THE", "OF", "AND"].includes(p))
@@ -146,16 +158,8 @@ function buildWhereClauses(city: CityConfig, parsed: ParsedAddress): string[] {
     }
   }
 
-  // Strategy 3: Just the house number
-  if (parsed.houseNumber) {
-    strategies.push(`${addressField}='${esc(parsed.houseNumber)}'`);
-  }
-
-  // Strategy 4: Street keyword only
-  if (parsed.streetKeyword) {
-    strategies.push(`upper(${streetField}) like '%${esc(parsed.streetKeyword)}%'`);
-  }
-
+  // REMOVED: "house number only" and "street keyword only" fallbacks.
+  // They matched unrelated properties (and other cities' data).
   return strategies;
 }
 
@@ -202,7 +206,7 @@ async function detailQuery(
 }
 
 // ═══════════════════════════════════════════════════════════
-// MAIN SEARCH — tries fallback strategies, returns count + detail
+// MAIN SEARCH
 // ═══════════════════════════════════════════════════════════
 
 async function searchWithFallbacks(
@@ -250,7 +254,8 @@ export async function fetchPermitsWithCount(
 
   const parsed = parseAddress(address);
 
-  if (!parsed.houseNumber && !parsed.streetKeyword) {
+  // Require BOTH a house number and a street — prevents vague/wrong matches.
+  if (!parsed.houseNumber || !parsed.streetKeyword) {
     return { permits: [], totalCount: 0, showingCount: 0 };
   }
 
