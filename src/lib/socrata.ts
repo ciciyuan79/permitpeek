@@ -3,6 +3,8 @@
 // Smart permit search with accurate total count + recent 50 detail.
 // Matching: requires house number AND street keyword (city-safe),
 // but tolerant of address formatting differences (good recall).
+// detailQuery retries without $order if the date field name is wrong,
+// so a bad date field never silently hides found permits.
 
 import { CityConfig } from "./cities";
 
@@ -193,20 +195,38 @@ async function detailQuery(
   limit: number = 50
 ): Promise<Record<string, string>[]> {
   const { endpoint, dateField } = city;
+
+  // First try: ordered by date (newest first)
+  if (dateField) {
+    const orderedParams = new URLSearchParams({
+      $where: where,
+      $limit: limit.toString(),
+      $order: `${dateField} DESC`,
+    });
+    try {
+      const res = await fetch(`${endpoint}?${orderedParams.toString()}`, {
+        next: { revalidate: 3600 },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) return data;
+      }
+    } catch {
+      // fall through to unordered
+    }
+  }
+
+  // Fallback: no ordering (works even if the date field name is wrong)
   const params = new URLSearchParams({
     $where: where,
     $limit: limit.toString(),
   });
-  if (dateField) {
-    params.set("$order", `${dateField} DESC`);
-  }
-
   try {
-    const response = await fetch(`${endpoint}?${params.toString()}`, {
+    const res = await fetch(`${endpoint}?${params.toString()}`, {
       next: { revalidate: 3600 },
     });
-    if (!response.ok) return [];
-    return await response.json();
+    if (!res.ok) return [];
+    return await res.json();
   } catch {
     return [];
   }
@@ -226,8 +246,6 @@ async function searchWithFallbacks(
     const total = await countQuery(city, where);
     if (total > 0) {
       const permits = await detailQuery(city, where, 50);
-      // Guard: if count says results but detail came back empty
-      // (e.g. ordering field issue), still return the count.
       return { where, permits, total };
     }
   }
