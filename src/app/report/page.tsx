@@ -92,11 +92,16 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
             <h1 className="font-display text-4xl md:text-6xl font-light text-stone-900 leading-tight max-w-4xl">
               {address.toUpperCase()}
             </h1>
-            <div className="flex items-center gap-2 mt-4 font-serif text-stone-500">
-              <span className="font-mono text-xs uppercase bg-stone-200 px-2 py-0.5 rounded-[2px]">
-                {city.state}
+            <div className="flex flex-wrap items-center gap-2 mt-4">
+              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-stone-500">
+                Searched within
               </span>
-              <span>{city.name} Jurisdiction</span>
+              <span className="font-mono text-xs uppercase tracking-wider bg-stone-900 text-stone-50 px-2.5 py-1 rounded-[2px]">
+                {city.name}, {city.state}
+              </span>
+              <span className="font-serif text-sm text-stone-500 italic">
+                — wrong city? Change it on the search bar.
+              </span>
             </div>
           </div>
         </section>
@@ -202,9 +207,18 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
                   )}
                 </>
               ) : (
-                <div className="bg-white p-20 text-center">
-                  <p className="font-serif text-stone-500 italic text-lg">
-                    No building permit records found for this property address.
+                <div className="bg-white p-16 md:p-20 text-center">
+                  <p className="font-display text-2xl font-light text-stone-900 mb-3">
+                    No permit records found
+                  </p>
+                  <p className="font-serif text-stone-600 leading-relaxed max-w-lg mx-auto">
+                    We couldn&rsquo;t find permits for this address in <strong>{city.name}, {city.state}</strong>.
+                    That can mean the property genuinely has no permit history, the address needs a
+                    different format (try the street number without an apt/unit), or
+                    <strong> the property is in a different city</strong> than the one selected.
+                  </p>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-stone-400 mt-6">
+                    PermitPeek currently covers select US cities only
                   </p>
                 </div>
               )}
