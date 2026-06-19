@@ -1,5 +1,5 @@
 // src/lib/cities.ts
-// Updated NYC field mappings + improved free tier reveal
+// Updated NYC field mappings + improved free tier reveal + Cincinnati added
 // Replace your current src/lib/cities.ts with this entire file
 
 export interface CityConfig {
@@ -15,9 +15,9 @@ export interface CityConfig {
   statusField?: string;
   valueField?: string;
   descField?: string;
-  workTypeField?: string;     // NEW — extra description field
-  ownerField?: string;        // NEW — owner name
-  permitteeField?: string;    // NEW — contractor name
+  workTypeField?: string;     // extra description field
+  ownerField?: string;        // owner name
+  permitteeField?: string;    // contractor name
   totalPermits?: string;
   population?: string;
   permitAuthority: string;
@@ -158,6 +158,27 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     population: "3.9M",
     permitAuthority: "LA Department of Building & Safety (LADBS)",
     avgReviewDays: 25,
+    tier: 1,
+  },
+  "cincinnati": {
+    name: "Cincinnati",
+    slug: "cincinnati",
+    state: "OH",
+    stateSlug: "ohio",
+    endpoint: "https://data.cincinnati-oh.gov/resource/dy5r-w456.json",
+    addressField: "originaladdress1",
+    streetField: null,
+    typeField: "permittypemapped",
+    dateField: "issueddate",
+    statusField: "statuscurrentmapped",
+    valueField: "estprojectcostdec",
+    descField: "description",
+    permitteeField: "companyname",      // contractor: "PARADIGM CONSTRUCTION LLC"
+    totalPermits: "300k+",
+    population: "310k",
+    permitAuthority: "Cincinnati Department of Buildings & Inspections",
+    permitAuthorityUrl: "https://www.cincinnati-oh.gov/buildings/",
+    avgReviewDays: 20,
     tier: 1,
   },
 };
