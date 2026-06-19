@@ -9,59 +9,47 @@ function getResend() {
   return new Resend(key);
 }
 
+// Where contact messages are delivered
+const CONTACT_INBOX = "citypermitpeek@gmail.com";
+
 export async function POST(request: NextRequest) {
   try {
-    const { email, city, address } = await request.json();
-    if (!email || !email.includes("@")) {
+    const { name, email, message } = await request.json();
+
+    if (!name || !email || !email.includes("@") || !message || message.trim().length < 3) {
       return NextResponse.json(
-        { error: "Valid email required" },
+        { error: "Please fill in your name, a valid email, and a message." },
         { status: 400 }
       );
     }
 
     const resend = getResend();
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
     // Dev fallback when no API key set
     if (!resend) {
-      console.log(`[DEV] Lead captured: ${email} for ${city}/${address}`);
+      console.log(`[DEV] Contact message from ${name} <${email}>: ${message}`);
       return NextResponse.json({ success: true, dev: true });
     }
 
     await resend.emails.send({
-      from: "PermitPeek <reports@citypermitpeek.com>",
-      to: email,
-      subject: `Your saved property: ${address}`,
+      from: "PermitPeek Contact <reports@citypermitpeek.com>",
+      to: CONTACT_INBOX,
+      replyTo: email,
+      subject: `New contact message from ${name}`,
       html: `
         <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; padding: 24px;">
-          <h1 style="font-size: 28px; font-weight: 300; color: #1c1917;">
-            Your property is saved
-          </h1>
-          <p style="font-size: 16px; line-height: 1.6; color: #44403c;">
-            Here's the link back to the permit report for
-            <strong>${address}</strong> in ${city}. When you're ready, unlock the full report
-            to see every permit, the complete risk analysis, and contractor details.
-          </p>
-          <p style="margin: 32px 0;">
-            <a href="${baseUrl}/report?city=${city}&address=${encodeURIComponent(address)}"
-               style="background: #1c1917; color: white; padding: 12px 24px; text-decoration: none; display: inline-block;">
-              View &amp; Unlock Report →
-            </a>
-          </p>
-          <hr style="margin: 32px 0; border: none; border-top: 1px solid #ddd;" />
-          <p style="color: #78716c; font-size: 13px;">
-            You'll occasionally get useful property insights from PermitPeek. Unsubscribe anytime.
-          </p>
+          <h2 style="font-weight: 300; color: #1c1917;">New message via PermitPeek</h2>
+          <p style="color: #44403c;"><strong>Name:</strong> ${name}</p>
+          <p style="color: #44403c;"><strong>Email:</strong> ${email}</p>
+          <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;" />
+          <p style="color: #1c1917; white-space: pre-wrap; line-height: 1.6;">${message}</p>
         </div>
       `,
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Subscribe error:", error);
-    return NextResponse.json(
-      { error: "Subscribe failed" },
-      { status: 500 }
-    );
+    console.error("Contact error:", error);
+    return NextResponse.json({ error: "Failed to send. Please try again." }, { status: 500 });
   }
 }
