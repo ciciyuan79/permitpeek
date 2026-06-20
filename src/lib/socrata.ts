@@ -1,8 +1,8 @@
 // src/lib/socrata.ts
 //
 // Permit search supporting BOTH Socrata and ArcGIS portals.
-// Socrata: ?$where= SoQL. ArcGIS: /query?where=...&f=json (features[].attributes).
-// City-safe matching (house number AND street keyword), formatting-tolerant.
+// ArcGIS cities may have a single `endpoint` or multiple `endpoints`
+// (merged into one city — e.g. Denver residential + commercial).
 
 import { CityConfig } from "./cities";
 
@@ -54,7 +54,7 @@ function extractStreetKeyword(streetParts: string[]): string {
   const streetTypes = new Set([
     "AVE", "AVENUE", "ST", "STREET", "BLVD", "BOULEVARD", "RD", "ROAD", "DR", "DRIVE",
     "PL", "PLACE", "PKWY", "PARKWAY", "TPKE", "TURNPIKE", "TER", "TERRACE", "LN", "LANE",
-    "CT", "COURT", "SQ", "SQUARE", "PLZ", "PLAZA", "HWY", "HIGHWAY", "CV", "COVE",
+    "CT", "COURT", "SQ", "SQUARE", "PLZ", "PLAZA", "HWY", "HIGHWAY", "CV", "COVE", "PIKE",
   ]);
 
   const meaningful = streetParts
@@ -97,19 +97,13 @@ function cleanValue(v: string): string {
   return (v || "").replace(/^"+|"+$/g, "").trim();
 }
 
-// ArcGIS dates are epoch milliseconds — convert to YYYY-MM-DD string.
 function formatArcgisDate(v: unknown): string {
   if (typeof v === "number" && v > 0) {
-    try {
-      return new Date(v).toISOString().split("T")[0];
-    } catch {
-      return "";
-    }
+    try { return new Date(v).toISOString().split("T")[0]; } catch { return ""; }
   }
   return typeof v === "string" ? v : "";
 }
 
-// Chicago-style numbered contact list → real contractor.
 function extractContactContractor(item: Record<string, string>): string {
   let general = "", any = "";
   for (let i = 1; i <= 12; i++) {
@@ -125,7 +119,7 @@ function extractContactContractor(item: Record<string, string>): string {
 }
 
 // ═══════════════════════════════════════════════════════════
-// SOCRATA QUERY BUILDING
+// SOCRATA
 // ═══════════════════════════════════════════════════════════
 
 function buildWhereClauses(city: CityConfig, parsed: ParsedAddress): string[] {
@@ -201,31 +195,23 @@ async function socrataSearch(city: CityConfig, parsed: ParsedAddress) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// ARCGIS QUERY BUILDING
-// ArcGIS uses a single full-address field. We build a city-safe
-// WHERE: address contains house number AND street keyword.
+// ARCGIS (single or multiple endpoints)
 // ═══════════════════════════════════════════════════════════
 
 function buildArcgisWhere(city: CityConfig, parsed: ParsedAddress): string {
-  const field = city.addressField; // ArcGIS cities are single full-address field
+  const field = city.addressField;
   const house = parsed.houseNumber.replace(/'/g, "''");
   const keyword = parsed.streetKeyword.replace(/'/g, "''");
-  // UPPER(field) LIKE '%HOUSE%' AND UPPER(field) LIKE '%KEYWORD%'
   return `UPPER(${field}) LIKE '%${house}%' AND UPPER(${field}) LIKE '%${keyword}%'`;
 }
 
-async function arcgisSearch(city: CityConfig, parsed: ParsedAddress) {
+async function arcgisSearchOne(endpoint: string, city: CityConfig, parsed: ParsedAddress) {
   const where = buildArcgisWhere(city, parsed);
 
-  // Count
-  const countParams = new URLSearchParams({
-    where,
-    returnCountOnly: "true",
-    f: "json",
-  });
+  const countParams = new URLSearchParams({ where, returnCountOnly: "true", f: "json" });
   let total = 0;
   try {
-    const res = await fetch(`${city.endpoint}/query?${countParams.toString()}`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${endpoint}/query?${countParams.toString()}`, { next: { revalidate: 3600 } });
     if (res.ok) {
       const data = await res.json();
       total = data.count || 0;
@@ -234,20 +220,12 @@ async function arcgisSearch(city: CityConfig, parsed: ParsedAddress) {
 
   if (total === 0) return { permits: [] as Record<string, unknown>[], total: 0 };
 
-  // Detail
-  const detailParams = new URLSearchParams({
-    where,
-    outFields: "*",
-    resultRecordCount: "50",
-    f: "json",
-  });
-  if (city.dateField) {
-    detailParams.set("orderByFields", `${city.dateField} DESC`);
-  }
+  const detailParams = new URLSearchParams({ where, outFields: "*", resultRecordCount: "50", f: "json" });
+  if (city.dateField) detailParams.set("orderByFields", `${city.dateField} DESC`);
 
   let features: Record<string, unknown>[] = [];
   try {
-    const res = await fetch(`${city.endpoint}/query?${detailParams.toString()}`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${endpoint}/query?${detailParams.toString()}`, { next: { revalidate: 3600 } });
     if (res.ok) {
       const data = await res.json();
       features = (data.features || []).map((f: { attributes: Record<string, unknown> }) => f.attributes);
@@ -255,6 +233,32 @@ async function arcgisSearch(city: CityConfig, parsed: ParsedAddress) {
   } catch { features = []; }
 
   return { permits: features, total };
+}
+
+async function arcgisSearch(city: CityConfig, parsed: ParsedAddress) {
+  const endpoints = city.endpoints && city.endpoints.length > 0
+    ? city.endpoints
+    : city.endpoint ? [city.endpoint] : [];
+
+  let allPermits: Record<string, unknown>[] = [];
+  let totalCount = 0;
+
+  for (const ep of endpoints) {
+    const { permits, total } = await arcgisSearchOne(ep, city, parsed);
+    allPermits = allPermits.concat(permits);
+    totalCount += total;
+  }
+
+  if (city.dateField) {
+    const df = city.dateField;
+    allPermits.sort((a, b) => {
+      const av = typeof a[df] === "number" ? (a[df] as number) : 0;
+      const bv = typeof b[df] === "number" ? (b[df] as number) : 0;
+      return bv - av;
+    });
+  }
+
+  return { permits: allPermits.slice(0, 50), total: totalCount };
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -293,7 +297,6 @@ export async function fetchPermitsWithCount(
       return v === null || v === undefined ? "" : String(v);
     };
 
-    // Contractor resolution
     let contractor = "";
     if (city.contractorFromContacts) {
       contractor = extractContactContractor(item as Record<string, string>);
@@ -303,13 +306,12 @@ export async function fetchPermitsWithCount(
       contractor = cleanValue(get(ownerField));
     }
 
-    // Date: ArcGIS = epoch ms, Socrata = string
     const date = isArcgis
       ? formatArcgisDate(dateField ? item[dateField] : undefined)
       : get(dateField);
 
     return {
-      id: get("id") || get("PERMIT_ID") || `permit-${index}`,
+      id: get("id") || get("PERMIT_ID") || get("PERMIT_NUM") || `permit-${index}`,
       type: get(typeField) || "Unknown",
       date,
       status: get(statusField) || "Unknown",
