@@ -65,7 +65,7 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     avgReviewDays: 14,
     tier: 1,
   },
-  "san-francisco": {
+ "san-francisco": {
     name: "San Francisco",
     slug: "san-francisco",
     state: "CA",
@@ -74,9 +74,9 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     addressField: "street_number",
     streetField: "street_name",
     typeField: "permit_type_definition",
-    dateField: "filed_date",
-    statusField: "current_status",
-    valueField: "estimated_cost",
+    dateField: "issued_date",          // CHANGED: was "filed_date" (issued is more meaningful)
+    statusField: "status",             // FIXED: was "current_status" (broke status counts)
+    valueField: "revised_cost",        // CHANGED: was "estimated_cost" (revised = true cost)
     descField: "description",
     totalPermits: "1.2M+",
     population: "808k",
