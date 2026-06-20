@@ -1,6 +1,6 @@
 // src/lib/cities.ts
-// All cities verified. Socrata + ArcGIS support. Denver uses multiple
-// endpoints (residential + commercial) merged into one city.
+// All cities verified. Socrata + ArcGIS. Denver multi-endpoint.
+// Adds Mesa (Socrata) + Tempe (ArcGIS), both AZ.
 // Replace your current src/lib/cities.ts with this entire file
 
 export interface CityConfig {
@@ -9,8 +9,8 @@ export interface CityConfig {
   state: string;
   stateSlug: string;
   endpoint?: string;
-  endpoints?: string[];              // multiple datasets merged into one city (e.g. Denver res + comm)
-  platform?: "socrata" | "arcgis";   // defaults to socrata when omitted
+  endpoints?: string[];
+  platform?: "socrata" | "arcgis";
   addressField?: string;
   streetField?: string | null;
   typeField?: string;
@@ -18,10 +18,10 @@ export interface CityConfig {
   statusField?: string;
   valueField?: string;
   descField?: string;
-  workTypeField?: string;     // extra description field
-  ownerField?: string;        // owner name (also contractor fallback)
-  permitteeField?: string;    // contractor name
-  contractorFromContacts?: boolean; // Chicago: extract contractor from contact_N list
+  workTypeField?: string;
+  ownerField?: string;
+  permitteeField?: string;
+  contractorFromContacts?: boolean;
   totalPermits?: string;
   population?: string;
   permitAuthority: string;
@@ -296,6 +296,28 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     permitAuthority: "City of Mesa Development Services",
     permitAuthorityUrl: "https://www.mesaaz.gov/business/development-services",
     avgReviewDays: 15,
+    tier: 1,
+  },
+  "tempe-az": {
+    name: "Tempe",
+    slug: "tempe-az",
+    state: "AZ",
+    stateSlug: "arizona",
+    platform: "arcgis",
+    endpoint: "https://services.arcgis.com/lQySeXwbBg53XWDi/ArcGIS/rest/services/building_permits/FeatureServer/0",
+    addressField: "OriginalAddress1",
+    streetField: null,
+    typeField: "PermitTypeDesc",
+    dateField: "IssuedDateDtm",
+    statusField: "StatusCurrent",
+    valueField: "EstProjectCost",
+    descField: "Description",
+    permitteeField: "ContractorCompanyName",
+    totalPermits: "200k+",
+    population: "185k",
+    permitAuthority: "City of Tempe Community Development",
+    permitAuthorityUrl: "https://www.tempe.gov/government/community-development",
+    avgReviewDays: 18,
     tier: 1,
   },
 };
