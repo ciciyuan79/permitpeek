@@ -278,6 +278,26 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     avgReviewDays: 20,
     tier: 1,
   },
+  "mesa-az": {
+    name: "Mesa",
+    slug: "mesa-az",
+    state: "AZ",
+    stateSlug: "arizona",
+    endpoint: "https://data.mesaaz.gov/resource/dzpk-hxfb.json",
+    addressField: "property_address",
+    streetField: null,
+    typeField: "permit_type",
+    dateField: "issued_date",
+    statusField: "status",
+    valueField: "total_valuation",
+    descField: "description_of_work",
+    totalPermits: "300k+",
+    population: "510k",
+    permitAuthority: "City of Mesa Development Services",
+    permitAuthorityUrl: "https://www.mesaaz.gov/business/development-services",
+    avgReviewDays: 15,
+    tier: 1,
+  },
 };
 
 export const INFO_CITIES: Record<string, CityConfig> = {};
