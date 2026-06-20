@@ -1,6 +1,6 @@
 // src/lib/cities.ts
-// All cities verified. Socrata + ArcGIS. Denver multi-endpoint.
-// Adds Mesa (Socrata) + Tempe (ArcGIS), both AZ.
+// 16 verified cities across Socrata + ArcGIS. Denver multi-endpoint.
+// Miami-Dade uses statusMap to decode A/E/F status codes.
 // Replace your current src/lib/cities.ts with this entire file
 
 export interface CityConfig {
@@ -22,6 +22,7 @@ export interface CityConfig {
   ownerField?: string;
   permitteeField?: string;
   contractorFromContacts?: boolean;
+  statusMap?: Record<string, string>;   // decode coded status values (e.g. Miami-Dade A/E/F)
   totalPermits?: string;
   population?: string;
   permitAuthority: string;
@@ -358,6 +359,29 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     totalPermits: "100k+",
     population: "4.5M",
     permitAuthority: "Maricopa County / Phoenix Metro",
+    avgReviewDays: 20,
+    tier: 1,
+  },
+  "miami-dade": {
+    name: "Miami-Dade",
+    slug: "miami-dade",
+    state: "FL",
+    stateSlug: "florida",
+    platform: "arcgis",
+    endpoint: "https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/arcgis/rest/services/BuildingPermit_gdb/FeatureServer/0",
+    addressField: "ADDRESS",
+    streetField: null,
+    typeField: "DESC1",
+    dateField: "ISSUDATE",
+    statusField: "BPSTATUS",
+    statusMap: { A: "Active", E: "Expired", F: "Finalized" },
+    valueField: "",
+    descField: "DESC1",
+    permitteeField: "CONTRNAME",
+    totalPermits: "100k+",
+    population: "2.7M",
+    permitAuthority: "Miami-Dade County Building Department",
+    permitAuthorityUrl: "https://www.miamidade.gov/global/economy/building/home.page",
     avgReviewDays: 20,
     tier: 1,
   },
