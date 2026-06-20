@@ -187,6 +187,26 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     avgReviewDays: 20,
     tier: 1,
   },
+  "kansas-city": {
+    name: "Kansas City",
+    slug: "kansas-city",
+    state: "MO",
+    stateSlug: "missouri",
+    endpoint: "https://data.kcmo.org/resource/w8jz-wjgn.json",
+    addressField: "main_address_line1",
+    streetField: null,
+    typeField: "permit_type",
+    dateField: "issue_date",
+    statusField: "permit_status",
+    valueField: "valuation",
+    descField: "work_class",
+    totalPermits: "200k+",
+    population: "510k",
+    permitAuthority: "Kansas City Development Services",
+    permitAuthorityUrl: "https://www.kcmo.gov/city-hall/departments/city-planning-development",
+    avgReviewDays: 18,
+    tier: 1,
+  },
 };
 
 export const INFO_CITIES: Record<string, CityConfig> = {};
