@@ -109,13 +109,13 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     state: "TX",
     stateSlug: "texas",
     endpoint: "https://data.austintexas.gov/resource/3syk-w9eu.json",
-    addressField: "original_address_1",
+    addressField: "original_address1",   // FIXED: was "original_address_1" (broke everything)
     streetField: null,
-    typeField: "permit_type_desc",
-    dateField: "applied_date",
-    statusField: "status_current",
-    valueField: "total_job_valuation",
-    descField: "description",
+    typeField: "permit_type_desc",        // correct ("Plumbing Permit")
+    dateField: "issue_date",              // FIXED: use issue_date (applieddate also exists)
+    statusField: "status_current",        // correct ("Active")
+    valueField: "total_job_valuation",    // UNVERIFIED — may be blank; confirm with a building permit
+    descField: "description",             // correct
     totalPermits: "620k+",
     population: "975k",
     permitAuthority: "Austin Development Services Department",
