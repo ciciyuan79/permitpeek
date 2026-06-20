@@ -341,6 +341,26 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     avgReviewDays: 18,
     tier: 1,
   },
+  "phoenix-metro": {
+    name: "Phoenix Metro",
+    slug: "phoenix-metro",
+    state: "AZ",
+    stateSlug: "arizona",
+    platform: "arcgis",
+    endpoint: "https://services.arcgis.com/ykpntM6e3tHvzKRJ/arcgis/rest/services/Building_Permits_%28view%29/FeatureServer/0",
+    addressField: "FullStreetAddress",
+    streetField: null,
+    typeField: "PermitType",
+    dateField: "IssuedDate",
+    statusField: "PermitStatus",
+    valueField: "",
+    descField: "PermitDescription",
+    totalPermits: "100k+",
+    population: "4.5M",
+    permitAuthority: "Maricopa County / Phoenix Metro",
+    avgReviewDays: 20,
+    tier: 1,
+  },
 };
 
 export const INFO_CITIES: Record<string, CityConfig> = {};
