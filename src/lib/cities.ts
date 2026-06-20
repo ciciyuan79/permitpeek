@@ -1,5 +1,6 @@
 // src/lib/cities.ts
-// NYC field mappings + Cincinnati added + Seattle fields corrected
+// Verified field mappings: Austin, Seattle, LA, Cincinnati corrected;
+// Chicago contractor-from-contacts enabled. SF still unverified.
 // Replace your current src/lib/cities.ts with this entire file
 
 export interface CityConfig {
@@ -16,8 +17,9 @@ export interface CityConfig {
   valueField?: string;
   descField?: string;
   workTypeField?: string;     // extra description field
-  ownerField?: string;        // owner name
+  ownerField?: string;        // owner name (also used as contractor fallback)
   permitteeField?: string;    // contractor name
+  contractorFromContacts?: boolean; // Chicago: extract contractor from contact_N list
   totalPermits?: string;
   population?: string;
   permitAuthority: string;
@@ -36,7 +38,7 @@ export interface StateConfig {
 }
 
 // ═══════════════════════════════════════════════════════════
-// TIER 1: LIVE DATA CITIES — Fields verified against current APIs
+// TIER 1: LIVE DATA CITIES
 // ═══════════════════════════════════════════════════════════
 
 export const LIVE_CITIES: Record<string, CityConfig> = {
@@ -48,12 +50,12 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     endpoint: "https://data.cityofnewyork.us/resource/ipu4-2q9a.json",
     addressField: "house__",
     streetField: "street_name",
-    typeField: "permit_type",          // FIXED: was job_type
-    dateField: "issuance_date",         // FIXED: was filing_date
-    statusField: "permit_status",       // FIXED: was job_status_descrp
-    valueField: "permit_si_no",         // NYC doesn't expose cost in this dataset
-    descField: "work_type",             // FIXED: was job_description
-    workTypeField: "job_type",          // Job type code (A1, A2, NB, etc)
+    typeField: "permit_type",
+    dateField: "issuance_date",
+    statusField: "permit_status",
+    valueField: "permit_si_no",
+    descField: "work_type",
+    workTypeField: "job_type",
     ownerField: "owner_s_business_name",
     permitteeField: "permittee_s_business_name",
     totalPermits: "4.87M+",
@@ -96,6 +98,7 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     statusField: "permit_status",
     valueField: "reported_cost",
     descField: "work_description",
+    contractorFromContacts: true,   // ADDED: pull real contractor from contact_N list
     totalPermits: "890k+",
     population: "2.7M",
     permitAuthority: "Chicago Department of Buildings",
@@ -116,8 +119,8 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     statusField: "status_current",
     valueField: "total_job_valuation",
     descField: "description",
-    permitteeField: "contractor_company_name",  // ADDED: "Jamar Roofing", etc.
-    ownerField: "contractor_full_name",          // fallback: "Akif Sultan" (your socrata falls back to ownerField)
+    permitteeField: "contractor_company_name",
+    ownerField: "contractor_full_name",
     totalPermits: "620k+",
     population: "975k",
     permitAuthority: "Austin Development Services Department",
@@ -132,31 +135,31 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     endpoint: "https://data.seattle.gov/resource/76t5-zqzr.json",
     addressField: "originaladdress1",
     streetField: null,
-    typeField: "permittypemapped",            // FIXED: was "permittype"
-    dateField: "issueddate",                   // FIXED: was "appliedddate" (didn't exist)
+    typeField: "permittypemapped",
+    dateField: "issueddate",
     statusField: "statuscurrent",
     valueField: "estprojectcost",
     descField: "description",
-    permitteeField: "contractorcompanyname",   // ADDED: contractor name
+    permitteeField: "contractorcompanyname",
     totalPermits: "410k+",
     population: "750k",
     permitAuthority: "Seattle Department of Construction & Inspections",
     avgReviewDays: 20,
     tier: 1,
   },
-"los-angeles": {
+  "los-angeles": {
     name: "Los Angeles",
     slug: "los-angeles",
     state: "CA",
     stateSlug: "california",
     endpoint: "https://data.lacity.org/resource/pi9x-tg5x.json",
-    addressField: "primary_address",   // FIXED: was "address_start" (broke everything)
-    streetField: null,                  // FIXED: LA is single-field, was "street_name"
-    typeField: "permit_type",           // correct ("Swimming-Pool/Spa")
-    dateField: "issue_date",            // correct
-    statusField: "status_desc",         // FIXED: was "status"
-    valueField: "valuation",            // correct (107000)
-    descField: "work_desc",             // FIXED: was "work_description"
+    addressField: "primary_address",
+    streetField: null,
+    typeField: "permit_type",
+    dateField: "issue_date",
+    statusField: "status_desc",
+    valueField: "valuation",
+    descField: "work_desc",
     totalPermits: "2.1M+",
     population: "3.9M",
     permitAuthority: "LA Department of Building & Safety (LADBS)",
@@ -176,7 +179,7 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     statusField: "statuscurrentmapped",
     valueField: "estprojectcostdec",
     descField: "description",
-    permitteeField: "companyname",      // contractor: "PARADIGM CONSTRUCTION LLC"
+    permitteeField: "companyname",
     totalPermits: "300k+",
     population: "310k",
     permitAuthority: "Cincinnati Department of Buildings & Inspections",
