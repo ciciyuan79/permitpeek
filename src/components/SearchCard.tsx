@@ -22,13 +22,14 @@ export default function SearchCard() {
     <div className="w-full max-w-3xl mx-auto reveal stagger-2">
       <form
         onSubmit={handleSearch}
-        className="flex flex-col md:flex-row gap-0 border border-stone-900/15 bg-white p-1 rounded-[4px] shadow-sm"
+        className="flex flex-col md:flex-row items-stretch gap-0 border border-stone-900/15 bg-white p-1.5 rounded-[4px] shadow-sm"
       >
-        <div className="relative border-b md:border-b-0 md:border-r border-stone-900/10">
+        {/* City selector */}
+        <div className="relative md:shrink-0 border-b md:border-b-0 md:border-r border-stone-900/10">
           <select
             value={citySlug}
             onChange={(e) => setCitySlug(e.target.value)}
-            className="w-full md:w-auto px-4 py-4 pr-9 bg-transparent font-mono text-[11px] uppercase tracking-wider text-stone-900 focus:outline-none appearance-none cursor-pointer"
+            className="w-full md:w-[190px] h-full pl-4 pr-10 py-4 bg-transparent font-mono text-[11px] uppercase tracking-wider text-stone-900 focus:outline-none appearance-none cursor-pointer truncate"
           >
             {CITIES_LIST.map((city) => (
               <option key={city.slug} value={city.slug}>
@@ -36,22 +37,28 @@ export default function SearchCard() {
               </option>
             ))}
           </select>
-          <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+          <ChevronDown
+            size={15}
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none"
+          />
         </div>
 
-        <div className="relative flex-grow">
+        {/* Address input */}
+        <div className="relative flex-grow min-w-0">
           <input
             type="text"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            placeholder="Enter property address (e.g. 350 5th Ave)"
-            className="w-full h-full px-6 py-4 font-serif text-lg placeholder:text-stone-400 focus:outline-none"
+            placeholder="Enter property address"
+            className="w-full h-full px-5 py-4 font-serif text-base md:text-lg placeholder:text-stone-400 focus:outline-none"
             required
           />
         </div>
+
+        {/* Search button */}
         <button
           type="submit"
-          className="bg-stone-900 text-stone-50 px-8 py-4 flex items-center justify-center gap-2 hover:bg-stone-800 transition-colors font-light rounded-[2px] m-0.5"
+          className="md:shrink-0 bg-stone-900 text-stone-50 px-7 py-4 flex items-center justify-center gap-2 hover:bg-stone-800 transition-colors font-light rounded-[2px] m-0.5 whitespace-nowrap"
         >
           <Search size={18} strokeWidth={1.5} />
           <span>Search Records</span>
