@@ -144,19 +144,19 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     avgReviewDays: 20,
     tier: 1,
   },
-  "los-angeles": {
+"los-angeles": {
     name: "Los Angeles",
     slug: "los-angeles",
     state: "CA",
     stateSlug: "california",
     endpoint: "https://data.lacity.org/resource/pi9x-tg5x.json",
-    addressField: "address_start",
-    streetField: "street_name",
-    typeField: "permit_type",
-    dateField: "issue_date",
-    statusField: "status",
-    valueField: "valuation",
-    descField: "work_description",
+    addressField: "primary_address",   // FIXED: was "address_start" (broke everything)
+    streetField: null,                  // FIXED: LA is single-field, was "street_name"
+    typeField: "permit_type",           // correct ("Swimming-Pool/Spa")
+    dateField: "issue_date",            // correct
+    statusField: "status_desc",         // FIXED: was "status"
+    valueField: "valuation",            // correct (107000)
+    descField: "work_desc",             // FIXED: was "work_description"
     totalPermits: "2.1M+",
     population: "3.9M",
     permitAuthority: "LA Department of Building & Safety (LADBS)",
