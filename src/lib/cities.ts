@@ -109,13 +109,15 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     state: "TX",
     stateSlug: "texas",
     endpoint: "https://data.austintexas.gov/resource/3syk-w9eu.json",
-    addressField: "original_address1",   // FIXED: was "original_address_1" (broke everything)
+    addressField: "original_address1",
     streetField: null,
-    typeField: "permit_type_desc",        // correct ("Plumbing Permit")
-    dateField: "issue_date",              // FIXED: use issue_date (applieddate also exists)
-    statusField: "status_current",        // correct ("Active")
-    valueField: "total_job_valuation",    // UNVERIFIED — may be blank; confirm with a building permit
-    descField: "description",             // correct
+    typeField: "permit_type_desc",
+    dateField: "issue_date",
+    statusField: "status_current",
+    valueField: "total_job_valuation",
+    descField: "description",
+    permitteeField: "contractor_company_name",  // ADDED: "Jamar Roofing", etc.
+    ownerField: "contractor_full_name",          // fallback: "Akif Sultan" (your socrata falls back to ownerField)
     totalPermits: "620k+",
     population: "975k",
     permitAuthority: "Austin Development Services Department",
