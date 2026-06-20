@@ -1,6 +1,6 @@
 // src/lib/cities.ts
-// Verified field mappings: Austin, Seattle, LA, Cincinnati corrected;
-// Chicago contractor-from-contacts enabled. SF still unverified.
+// Verified field mappings for all cities + Kansas City (Socrata) +
+// Washington DC (ArcGIS) added. platform field enables ArcGIS support.
 // Replace your current src/lib/cities.ts with this entire file
 
 export interface CityConfig {
@@ -9,6 +9,7 @@ export interface CityConfig {
   state: string;
   stateSlug: string;
   endpoint?: string;
+  platform?: "socrata" | "arcgis";   // defaults to socrata when omitted
   addressField?: string;
   streetField?: string | null;
   typeField?: string;
@@ -17,7 +18,7 @@ export interface CityConfig {
   valueField?: string;
   descField?: string;
   workTypeField?: string;     // extra description field
-  ownerField?: string;        // owner name (also used as contractor fallback)
+  ownerField?: string;        // owner name (also contractor fallback)
   permitteeField?: string;    // contractor name
   contractorFromContacts?: boolean; // Chicago: extract contractor from contact_N list
   totalPermits?: string;
@@ -65,7 +66,7 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     avgReviewDays: 14,
     tier: 1,
   },
- "san-francisco": {
+  "san-francisco": {
     name: "San Francisco",
     slug: "san-francisco",
     state: "CA",
@@ -74,9 +75,9 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     addressField: "street_number",
     streetField: "street_name",
     typeField: "permit_type_definition",
-    dateField: "issued_date",          // CHANGED: was "filed_date" (issued is more meaningful)
-    statusField: "status",             // FIXED: was "current_status" (broke status counts)
-    valueField: "revised_cost",        // CHANGED: was "estimated_cost" (revised = true cost)
+    dateField: "issued_date",
+    statusField: "status",
+    valueField: "revised_cost",
     descField: "description",
     totalPermits: "1.2M+",
     population: "808k",
@@ -98,7 +99,7 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     statusField: "permit_status",
     valueField: "reported_cost",
     descField: "work_description",
-    contractorFromContacts: true,   // ADDED: pull real contractor from contact_N list
+    contractorFromContacts: true,
     totalPermits: "890k+",
     population: "2.7M",
     permitAuthority: "Chicago Department of Buildings",
@@ -205,6 +206,28 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     permitAuthority: "Kansas City Development Services",
     permitAuthorityUrl: "https://www.kcmo.gov/city-hall/departments/city-planning-development",
     avgReviewDays: 18,
+    tier: 1,
+  },
+  "washington-dc": {
+    name: "Washington",
+    slug: "washington-dc",
+    state: "DC",
+    stateSlug: "district-of-columbia",
+    platform: "arcgis",
+    endpoint: "https://maps2.dcgis.dc.gov/dcgis/rest/services/FEEDS/DCRA/FeatureServer/17",
+    addressField: "FULL_ADDRESS",
+    streetField: null,
+    typeField: "PERMIT_TYPE_NAME",
+    dateField: "ISSUE_DATE",
+    statusField: "APPLICATION_STATUS_NAME",
+    valueField: "",
+    descField: "DESC_OF_WORK",
+    ownerField: "OWNER_NAME",
+    totalPermits: "150k+",
+    population: "690k",
+    permitAuthority: "DC Department of Buildings (DOB)",
+    permitAuthorityUrl: "https://dob.dc.gov/",
+    avgReviewDays: 20,
     tier: 1,
   },
 };
