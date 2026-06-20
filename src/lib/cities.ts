@@ -1,6 +1,6 @@
 // src/lib/cities.ts
-// Verified field mappings for all cities + Kansas City (Socrata) +
-// Washington DC (ArcGIS) added. platform field enables ArcGIS support.
+// All cities verified. Socrata + ArcGIS support. Denver uses multiple
+// endpoints (residential + commercial) merged into one city.
 // Replace your current src/lib/cities.ts with this entire file
 
 export interface CityConfig {
@@ -9,6 +9,7 @@ export interface CityConfig {
   state: string;
   stateSlug: string;
   endpoint?: string;
+  endpoints?: string[];              // multiple datasets merged into one city (e.g. Denver res + comm)
   platform?: "socrata" | "arcgis";   // defaults to socrata when omitted
   addressField?: string;
   streetField?: string | null;
@@ -241,15 +242,40 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     streetField: null,
     typeField: "Permit_Type_Description",
     dateField: "Date_Issued",
-    statusField: "",                 // no status field in this dataset
+    statusField: "",
     valueField: "Const_Cost",
     descField: "Purpose",
-    permitteeField: "Contact",       // contractor: "TRI STAR TRANSPORT LLC"
+    permitteeField: "Contact",
     totalPermits: "250k+",
     population: "690k",
     permitAuthority: "Metro Nashville Codes & Building Safety",
     permitAuthorityUrl: "https://www.nashville.gov/departments/codes-and-building-safety",
     avgReviewDays: 18,
+    tier: 1,
+  },
+  "denver": {
+    name: "Denver",
+    slug: "denver",
+    state: "CO",
+    stateSlug: "colorado",
+    platform: "arcgis",
+    endpoints: [
+      "https://services1.arcgis.com/zdB7qR0BtYrg0Xpl/arcgis/rest/services/ODC_DEV_RESIDENTIALCONSTPERMIT_P/FeatureServer/316",
+      "https://services1.arcgis.com/zdB7qR0BtYrg0Xpl/arcgis/rest/services/ODC_DEV_COMMERCIALCONSTPERMIT_P/FeatureServer/317",
+    ],
+    addressField: "ADDRESS",
+    streetField: null,
+    typeField: "CLASS",
+    dateField: "DATE_ISSUED",
+    statusField: "",
+    valueField: "VALUATION",
+    descField: "CLASS",
+    permitteeField: "CONTRACTOR_NAME",
+    totalPermits: "150k+",
+    population: "715k",
+    permitAuthority: "Denver Community Planning & Development",
+    permitAuthorityUrl: "https://www.denvergov.org/Government/Agencies-Departments-Offices/Community-Planning-and-Development",
+    avgReviewDays: 20,
     tier: 1,
   },
 };
