@@ -1,8 +1,8 @@
 // src/lib/socrata.ts
 //
 // Permit search supporting BOTH Socrata and ArcGIS portals.
-// ArcGIS cities may have a single `endpoint` or multiple `endpoints`
-// (merged into one city — e.g. Denver residential + commercial).
+// ArcGIS cities may have one `endpoint` or multiple `endpoints` (merged).
+// Optional `statusMap` decodes coded status values (e.g. Miami-Dade A/E/F).
 
 import { CityConfig } from "./cities";
 
@@ -294,7 +294,7 @@ export async function fetchPermitsWithCount(
     const get = (f?: string): string => {
       if (!f) return "";
       const v = item[f];
-      return v === null || v === undefined ? "" : String(v);
+      return v === null || v === undefined ? "" : String(v).trim();
     };
 
     let contractor = "";
@@ -310,11 +310,19 @@ export async function fetchPermitsWithCount(
       ? formatArcgisDate(dateField ? item[dateField] : undefined)
       : get(dateField);
 
+    // Status, with optional code decoding (e.g. Miami-Dade A/E/F)
+    let status = get(statusField);
+    if (!status) {
+      status = "Unknown";
+    } else if (city.statusMap && city.statusMap[status]) {
+      status = city.statusMap[status];
+    }
+
     return {
-      id: get("id") || get("PERMIT_ID") || get("PERMIT_NUM") || `permit-${index}`,
+      id: get("id") || get("PERMIT_ID") || get("PERMIT_NUM") || get("PermitNumber") || `permit-${index}`,
       type: get(typeField) || "Unknown",
       date,
-      status: get(statusField) || "Unknown",
+      status,
       value: get(valueField) || "0",
       description: get(descField) || "No description provided",
       address: streetField
