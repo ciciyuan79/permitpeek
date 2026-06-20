@@ -320,6 +320,27 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     avgReviewDays: 18,
     tier: 1,
   },
+  "virginia-beach": {
+    name: "Virginia Beach",
+    slug: "virginia-beach",
+    state: "VA",
+    stateSlug: "virginia",
+    platform: "arcgis",
+    endpoint: "https://services2.arcgis.com/CyVvlIiUfRBmMQuu/arcgis/rest/services/Building_Permits_Applications_view/FeatureServer/0",
+    addressField: "StreetAddress",
+    streetField: null,
+    typeField: "PermitType",
+    dateField: "IssueDate",
+    statusField: "Status",
+    valueField: "",
+    descField: "WorkDesc",
+    totalPermits: "100k+",
+    population: "455k",
+    permitAuthority: "Virginia Beach Planning Department",
+    permitAuthorityUrl: "https://www.virginiabeach.gov/departments/planning",
+    avgReviewDays: 18,
+    tier: 1,
+  },
 };
 
 export const INFO_CITIES: Record<string, CityConfig> = {};
