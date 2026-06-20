@@ -230,6 +230,28 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     avgReviewDays: 20,
     tier: 1,
   },
+  "nashville": {
+    name: "Nashville",
+    slug: "nashville",
+    state: "TN",
+    stateSlug: "tennessee",
+    platform: "arcgis",
+    endpoint: "https://services2.arcgis.com/HdTo6HJqh92wn4D8/arcgis/rest/services/Building_Permits_Issued_2/FeatureServer/0",
+    addressField: "Address",
+    streetField: null,
+    typeField: "Permit_Type_Description",
+    dateField: "Date_Issued",
+    statusField: "",                 // no status field in this dataset
+    valueField: "Const_Cost",
+    descField: "Purpose",
+    permitteeField: "Contact",       // contractor: "TRI STAR TRANSPORT LLC"
+    totalPermits: "250k+",
+    population: "690k",
+    permitAuthority: "Metro Nashville Codes & Building Safety",
+    permitAuthorityUrl: "https://www.nashville.gov/departments/codes-and-building-safety",
+    avgReviewDays: 18,
+    tier: 1,
+  },
 };
 
 export const INFO_CITIES: Record<string, CityConfig> = {};
