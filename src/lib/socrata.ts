@@ -1,9 +1,8 @@
 // src/lib/socrata.ts
 //
-// Smart permit search with accurate total count + recent 50 detail.
-// City-safe matching (requires house number AND street keyword),
-// tolerant of address formatting. Chicago contractor extracted from
-// its numbered contact list.
+// Permit search supporting BOTH Socrata and ArcGIS portals.
+// Socrata: ?$where= SoQL. ArcGIS: /query?where=...&f=json (features[].attributes).
+// City-safe matching (house number AND street keyword), formatting-tolerant.
 
 import { CityConfig } from "./cities";
 
@@ -30,9 +29,7 @@ export interface PermitSearchResult {
 
 function stripLocationSuffix(address: string): string {
   const commaIdx = address.indexOf(",");
-  if (commaIdx !== -1) {
-    return address.substring(0, commaIdx).trim();
-  }
+  if (commaIdx !== -1) return address.substring(0, commaIdx).trim();
   return address.trim();
 }
 
@@ -52,16 +49,12 @@ function isQueensAddress(houseNumber: string): boolean {
 
 function extractStreetKeyword(streetParts: string[]): string {
   const directionWords = new Set([
-    "W", "E", "N", "S",
-    "WEST", "EAST", "NORTH", "SOUTH",
-    "NE", "NW", "SE", "SW",
+    "W", "E", "N", "S", "WEST", "EAST", "NORTH", "SOUTH", "NE", "NW", "SE", "SW",
   ]);
-
   const streetTypes = new Set([
-    "AVE", "AVENUE", "ST", "STREET", "BLVD", "BOULEVARD",
-    "RD", "ROAD", "DR", "DRIVE", "PL", "PLACE", "PKWY", "PARKWAY",
-    "TPKE", "TURNPIKE", "TER", "TERRACE", "LN", "LANE", "CT", "COURT",
-    "SQ", "SQUARE", "PLZ", "PLAZA", "HWY", "HIGHWAY", "CV", "COVE",
+    "AVE", "AVENUE", "ST", "STREET", "BLVD", "BOULEVARD", "RD", "ROAD", "DR", "DRIVE",
+    "PL", "PLACE", "PKWY", "PARKWAY", "TPKE", "TURNPIKE", "TER", "TERRACE", "LN", "LANE",
+    "CT", "COURT", "SQ", "SQUARE", "PLZ", "PLAZA", "HWY", "HIGHWAY", "CV", "COVE",
   ]);
 
   const meaningful = streetParts
@@ -71,7 +64,6 @@ function extractStreetKeyword(streetParts: string[]): string {
   if (meaningful.length === 0) {
     return streetParts.join(" ").toUpperCase().replace(/[^\w\s]/g, "").trim();
   }
-
   return stripOrdinal(meaningful[0]);
 }
 
@@ -88,7 +80,6 @@ function parseAddress(rawAddress: string): ParsedAddress {
   const parts = cleaned.split(/\s+/);
   const houseNumber = parts[0] || "";
   const streetParts = parts.slice(1);
-
   return {
     houseNumber,
     streetParts,
@@ -106,168 +97,171 @@ function cleanValue(v: string): string {
   return (v || "").replace(/^"+|"+$/g, "").trim();
 }
 
-// Chicago stores contributors in numbered contacts (contact_1_type/name ...).
-// Pull the real contractor: prefer GENERAL CONTRACTOR, then any CONTRACTOR,
-// skipping owners, architects, and expeditors.
-function extractContactContractor(item: Record<string, string>): string {
-  let generalContractor = "";
-  let anyContractor = "";
+// ArcGIS dates are epoch milliseconds — convert to YYYY-MM-DD string.
+function formatArcgisDate(v: unknown): string {
+  if (typeof v === "number" && v > 0) {
+    try {
+      return new Date(v).toISOString().split("T")[0];
+    } catch {
+      return "";
+    }
+  }
+  return typeof v === "string" ? v : "";
+}
 
+// Chicago-style numbered contact list → real contractor.
+function extractContactContractor(item: Record<string, string>): string {
+  let general = "", any = "";
   for (let i = 1; i <= 12; i++) {
     const type = (item[`contact_${i}_type`] || "").toUpperCase();
     const name = cleanValue(item[`contact_${i}_name`] || "");
     if (!type || !name) continue;
-
     if (type.includes("CONTRACTOR")) {
-      if (type.includes("GENERAL")) {
-        if (!generalContractor) generalContractor = name;
-      } else if (!anyContractor) {
-        anyContractor = name;
-      }
+      if (type.includes("GENERAL")) { if (!general) general = name; }
+      else if (!any) any = name;
     }
   }
-
-  return generalContractor || anyContractor || "";
+  return general || any || "";
 }
 
 // ═══════════════════════════════════════════════════════════
-// QUERY EXECUTION
+// SOCRATA QUERY BUILDING
 // ═══════════════════════════════════════════════════════════
 
 function buildWhereClauses(city: CityConfig, parsed: ParsedAddress): string[] {
   const { addressField, streetField } = city;
   const strategies: string[] = [];
-
   const house = esc(parsed.houseNumber);
   const keyword = esc(parsed.streetKeyword);
 
-  if (!parsed.houseNumber || !parsed.streetKeyword) {
-    return strategies;
-  }
+  if (!parsed.houseNumber || !parsed.streetKeyword) return strategies;
 
   if (!streetField) {
-    strategies.push(
-      `upper(${addressField}) like '%${house}%${keyword}%'`
-    );
-    strategies.push(
-      `upper(${addressField}) like '%${house}%' AND upper(${addressField}) like '%${keyword}%'`
-    );
+    strategies.push(`upper(${addressField}) like '%${house}%${keyword}%'`);
+    strategies.push(`upper(${addressField}) like '%${house}%' AND upper(${addressField}) like '%${keyword}%'`);
     return strategies;
   }
 
-  strategies.push(
-    `${addressField}='${house}' AND upper(${streetField}) like '%${keyword}%'`
-  );
+  strategies.push(`${addressField}='${house}' AND upper(${streetField}) like '%${keyword}%'`);
 
   if (parsed.streetParts.length > 1) {
     const partsConditions = parsed.streetParts
       .map(p => p.toUpperCase().replace(/[^\w]/g, ""))
       .filter(p => p.length > 2 && !["THE", "OF", "AND"].includes(p))
       .map(p => `upper(${streetField}) like '%${esc(p)}%'`);
-
     if (partsConditions.length > 0) {
-      strategies.push(
-        `${addressField}='${house}' AND ${partsConditions.join(" AND ")}`
-      );
+      strategies.push(`${addressField}='${house}' AND ${partsConditions.join(" AND ")}`);
     }
   }
 
-  strategies.push(
-    `upper(${addressField}) like '%${house}%' AND upper(${streetField}) like '%${keyword}%'`
-  );
-
+  strategies.push(`upper(${addressField}) like '%${house}%' AND upper(${streetField}) like '%${keyword}%'`);
   return strategies;
 }
 
-async function countQuery(city: CityConfig, where: string): Promise<number> {
-  const { endpoint } = city;
-  const params = new URLSearchParams({
-    $where: where,
-    $select: "count(*) as total",
-  });
-
+async function socrataCount(city: CityConfig, where: string): Promise<number> {
+  const params = new URLSearchParams({ $where: where, $select: "count(*) as total" });
   try {
-    const response = await fetch(`${endpoint}?${params.toString()}`, {
-      next: { revalidate: 3600 },
-    });
-    if (!response.ok) return 0;
-    const data = await response.json();
+    const res = await fetch(`${city.endpoint}?${params.toString()}`, { next: { revalidate: 3600 } });
+    if (!res.ok) return 0;
+    const data = await res.json();
     return parseInt(data[0]?.total || "0", 10);
-  } catch {
-    return 0;
-  }
+  } catch { return 0; }
 }
 
-async function detailQuery(
-  city: CityConfig,
-  where: string,
-  limit: number = 50
-): Promise<Record<string, string>[]> {
+async function socrataDetail(city: CityConfig, where: string, limit = 50): Promise<Record<string, string>[]> {
   const { endpoint, dateField } = city;
-
   if (dateField) {
-    const orderedParams = new URLSearchParams({
-      $where: where,
-      $limit: limit.toString(),
-      $order: `${dateField} DESC`,
-    });
+    const p = new URLSearchParams({ $where: where, $limit: limit.toString(), $order: `${dateField} DESC` });
     try {
-      const res = await fetch(`${endpoint}?${orderedParams.toString()}`, {
-        next: { revalidate: 3600 },
-      });
+      const res = await fetch(`${endpoint}?${p.toString()}`, { next: { revalidate: 3600 } });
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) return data;
       }
-    } catch {
-      // fall through to unordered
-    }
+    } catch { /* fall through */ }
   }
-
-  const params = new URLSearchParams({
-    $where: where,
-    $limit: limit.toString(),
-  });
+  const p = new URLSearchParams({ $where: where, $limit: limit.toString() });
   try {
-    const res = await fetch(`${endpoint}?${params.toString()}`, {
-      next: { revalidate: 3600 },
-    });
+    const res = await fetch(`${endpoint}?${p.toString()}`, { next: { revalidate: 3600 } });
     if (!res.ok) return [];
     return await res.json();
-  } catch {
-    return [];
+  } catch { return []; }
+}
+
+async function socrataSearch(city: CityConfig, parsed: ParsedAddress) {
+  const strategies = buildWhereClauses(city, parsed);
+  for (const where of strategies) {
+    const total = await socrataCount(city, where);
+    if (total > 0) {
+      const permits = await socrataDetail(city, where, 50);
+      return { permits, total };
+    }
   }
+  return { permits: [] as Record<string, string>[], total: 0 };
 }
 
 // ═══════════════════════════════════════════════════════════
-// MAIN SEARCH
+// ARCGIS QUERY BUILDING
+// ArcGIS uses a single full-address field. We build a city-safe
+// WHERE: address contains house number AND street keyword.
 // ═══════════════════════════════════════════════════════════
 
-async function searchWithFallbacks(
-  city: CityConfig,
-  parsed: ParsedAddress
-): Promise<{ where: string; permits: Record<string, string>[]; total: number }> {
-  const strategies = buildWhereClauses(city, parsed);
+function buildArcgisWhere(city: CityConfig, parsed: ParsedAddress): string {
+  const field = city.addressField; // ArcGIS cities are single full-address field
+  const house = parsed.houseNumber.replace(/'/g, "''");
+  const keyword = parsed.streetKeyword.replace(/'/g, "''");
+  // UPPER(field) LIKE '%HOUSE%' AND UPPER(field) LIKE '%KEYWORD%'
+  return `UPPER(${field}) LIKE '%${house}%' AND UPPER(${field}) LIKE '%${keyword}%'`;
+}
 
-  for (const where of strategies) {
-    const total = await countQuery(city, where);
-    if (total > 0) {
-      const permits = await detailQuery(city, where, 50);
-      return { where, permits, total };
+async function arcgisSearch(city: CityConfig, parsed: ParsedAddress) {
+  const where = buildArcgisWhere(city, parsed);
+
+  // Count
+  const countParams = new URLSearchParams({
+    where,
+    returnCountOnly: "true",
+    f: "json",
+  });
+  let total = 0;
+  try {
+    const res = await fetch(`${city.endpoint}/query?${countParams.toString()}`, { next: { revalidate: 3600 } });
+    if (res.ok) {
+      const data = await res.json();
+      total = data.count || 0;
     }
+  } catch { total = 0; }
+
+  if (total === 0) return { permits: [] as Record<string, unknown>[], total: 0 };
+
+  // Detail
+  const detailParams = new URLSearchParams({
+    where,
+    outFields: "*",
+    resultRecordCount: "50",
+    f: "json",
+  });
+  if (city.dateField) {
+    detailParams.set("orderByFields", `${city.dateField} DESC`);
   }
 
-  return { where: "", permits: [], total: 0 };
+  let features: Record<string, unknown>[] = [];
+  try {
+    const res = await fetch(`${city.endpoint}/query?${detailParams.toString()}`, { next: { revalidate: 3600 } });
+    if (res.ok) {
+      const data = await res.json();
+      features = (data.features || []).map((f: { attributes: Record<string, unknown> }) => f.attributes);
+    }
+  } catch { features = []; }
+
+  return { permits: features, total };
 }
 
 // ═══════════════════════════════════════════════════════════
 // MAIN EXPORTS
 // ═══════════════════════════════════════════════════════════
 
-export async function fetchPermits(
-  city: CityConfig,
-  address: string
-): Promise<Permit[]> {
+export async function fetchPermits(city: CityConfig, address: string): Promise<Permit[]> {
   const result = await fetchPermitsWithCount(city, address);
   return result.permits;
 }
@@ -276,53 +270,57 @@ export async function fetchPermitsWithCount(
   city: CityConfig,
   address: string
 ): Promise<PermitSearchResult> {
-  const {
-    addressField,
-    streetField,
-    typeField,
-    dateField,
-    statusField,
-    valueField,
-    descField,
-    permitteeField,
-    ownerField,
-  } = city;
-
   const parsed = parseAddress(address);
-
   if (!parsed.houseNumber || !parsed.streetKeyword) {
     return { permits: [], totalCount: 0, showingCount: 0 };
   }
 
-  const { permits: rawResults, total } = await searchWithFallbacks(city, parsed);
+  const isArcgis = city.platform === "arcgis";
 
-  const permits: Permit[] = rawResults.map((item: Record<string, string>, index: number) => {
+  const { permits: rawResults, total } = isArcgis
+    ? await arcgisSearch(city, parsed)
+    : await socrataSearch(city, parsed);
+
+  const {
+    addressField, streetField, typeField, dateField, statusField,
+    valueField, descField, permitteeField, ownerField,
+  } = city;
+
+  const permits: Permit[] = (rawResults as Record<string, unknown>[]).map((item, index) => {
+    const get = (f?: string): string => {
+      if (!f) return "";
+      const v = item[f];
+      return v === null || v === undefined ? "" : String(v);
+    };
+
+    // Contractor resolution
     let contractor = "";
     if (city.contractorFromContacts) {
-      contractor = extractContactContractor(item);
-    } else if (permitteeField && item[permitteeField]) {
-      contractor = cleanValue(item[permitteeField]);
-    } else if (ownerField && item[ownerField]) {
-      contractor = cleanValue(item[ownerField]);
+      contractor = extractContactContractor(item as Record<string, string>);
+    } else if (permitteeField && get(permitteeField)) {
+      contractor = cleanValue(get(permitteeField));
+    } else if (ownerField && get(ownerField)) {
+      contractor = cleanValue(get(ownerField));
     }
 
+    // Date: ArcGIS = epoch ms, Socrata = string
+    const date = isArcgis
+      ? formatArcgisDate(dateField ? item[dateField] : undefined)
+      : get(dateField);
+
     return {
-      id: item.id || `permit-${index}`,
-      type: (typeField && item[typeField]) || "Unknown",
-      date: (dateField && item[dateField]) || "",
-      status: (statusField && item[statusField]) || "Unknown",
-      value: (valueField && item[valueField]) || "0",
-      description: (descField && item[descField]) || "No description provided",
+      id: get("id") || get("PERMIT_ID") || `permit-${index}`,
+      type: get(typeField) || "Unknown",
+      date,
+      status: get(statusField) || "Unknown",
+      value: get(valueField) || "0",
+      description: get(descField) || "No description provided",
       address: streetField
-        ? `${item[addressField || ""] || ""} ${item[streetField] || ""}`.trim()
-        : item[addressField || ""] || "",
+        ? `${get(addressField)} ${get(streetField)}`.trim()
+        : get(addressField),
       contractor,
     };
   });
 
-  return {
-    permits,
-    totalCount: total,
-    showingCount: permits.length,
-  };
+  return { permits, totalCount: total, showingCount: permits.length };
 }
