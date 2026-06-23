@@ -42,10 +42,10 @@ export default function HomePage() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 border-t border-b border-stone-900/10 mt-12 md:mt-20 reveal stagger-3">
-              {[
-                ["8.8M+", "Permits indexed"],
-                ["1,800+", "Jurisdictions"],
-                ["Daily", "Data refresh"],
+             {[
+                ["12M+", "Permits searchable"],
+                ["20+", "Cities covered"],
+                ["Live", "Data refresh"],
                 ["30s", "To a full report"],
               ].map((s, i) => (
                 <div key={i} className={`py-6 md:py-8 px-5 md:px-6 ${i % 2 === 1 ? "border-l border-stone-900/10" : ""} ${i >= 2 ? "border-t border-stone-900/10 md:border-t-0" : ""} ${i === 2 ? "md:border-l" : ""}`}>
