@@ -475,6 +475,27 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     avgReviewDays: 18,
     tier: 1,
   },
+  "san-diego-county": {
+    name: "San Diego County",
+    slug: "san-diego-county",
+    state: "CA",
+    stateSlug: "california",
+    endpoint: "https://data.sandiegocounty.gov/resource/dyzh-7eat.json",
+    addressField: "street_address",
+    streetField: null,
+    typeField: "record_category",
+    dateField: "issued_date",
+    statusField: "record_status",
+    valueField: "",
+    descField: "use",
+    permitteeField: "contractor_name",
+    totalPermits: "100k+",
+    population: "500k+ unincorporated",
+    permitAuthority: "San Diego County Planning & Development Services",
+    permitAuthorityUrl: "https://www.sandiegocounty.gov/pds/",
+    avgReviewDays: 20,
+    tier: 1,
+  },
 };
 
 export const INFO_CITIES: Record<string, CityConfig> = {};
