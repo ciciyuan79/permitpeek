@@ -2,19 +2,29 @@
 
 import { useState, useEffect, useRef } from "react";
 
+// All 21 live cities, positioned on the US map. All live.
 const CITIES = [
-  { name: "Seattle", state: "WA", x: 95, y: 92, live: true, recs: "1.1M" },
-  { name: "San Francisco", state: "CA", x: 62, y: 240, live: true, recs: "900K" },
-  { name: "Los Angeles", state: "CA", x: 120, y: 332, live: true, recs: "3.2M" },
-  { name: "San Diego", state: "CA", x: 138, y: 370, live: false, recs: "640K" },
-  { name: "Austin", state: "TX", x: 485, y: 428, live: true, recs: "1.4M" },
-  { name: "New Orleans", state: "LA", x: 612, y: 440, live: false, recs: "380K" },
-  { name: "Minneapolis", state: "MN", x: 558, y: 135, live: false, recs: "520K" },
-  { name: "Chicago", state: "IL", x: 655, y: 205, live: true, recs: "2.1M" },
-  { name: "Cincinnati", state: "OH", x: 712, y: 248, live: false, recs: "410K" },
-  { name: "Baltimore", state: "MD", x: 832, y: 230, live: false, recs: "560K" },
+  { name: "Seattle", state: "WA", x: 95, y: 92, live: true, recs: "410K" },
+  { name: "San Francisco", state: "CA", x: 60, y: 240, live: true, recs: "1.2M" },
+  { name: "Los Angeles", state: "CA", x: 118, y: 332, live: true, recs: "2.1M" },
+  { name: "San Diego County", state: "CA", x: 135, y: 372, live: true, recs: "100K" },
+  { name: "Denver", state: "CO", x: 388, y: 250, live: true, recs: "150K" },
+  { name: "Phoenix Metro", state: "AZ", x: 225, y: 350, live: true, recs: "100K" },
+  { name: "Mesa", state: "AZ", x: 245, y: 360, live: true, recs: "300K" },
+  { name: "Tempe", state: "AZ", x: 235, y: 368, live: true, recs: "200K" },
+  { name: "Austin", state: "TX", x: 485, y: 428, live: true, recs: "620K" },
+  { name: "Kansas City", state: "MO", x: 540, y: 250, live: true, recs: "200K" },
+  { name: "Chicago", state: "IL", x: 655, y: 200, live: true, recs: "890K" },
+  { name: "Nashville", state: "TN", x: 690, y: 310, live: true, recs: "250K" },
+  { name: "Cincinnati", state: "OH", x: 715, y: 248, live: true, recs: "300K" },
+  { name: "Miami-Dade", state: "FL", x: 815, y: 458, live: true, recs: "100K" },
+  { name: "Pittsburgh", state: "PA", x: 800, y: 218, live: true, recs: "62K" },
+  { name: "Washington", state: "DC", x: 838, y: 238, live: true, recs: "150K" },
+  { name: "Virginia Beach", state: "VA", x: 858, y: 268, live: true, recs: "100K" },
+  { name: "Philadelphia", state: "PA", x: 858, y: 212, live: true, recs: "880K" },
   { name: "New York City", state: "NY", x: 882, y: 184, live: true, recs: "4.8M" },
-  { name: "Boston", state: "MA", x: 912, y: 156, live: false, recs: "470K" },
+  { name: "Buffalo", state: "NY", x: 812, y: 168, live: true, recs: "200K" },
+  { name: "Boston", state: "MA", x: 912, y: 156, live: true, recs: "728K" },
 ];
 const US_PATH = "M60,58 L300,44 L540,42 L600,54 L760,60 L880,70 L945,96 L935,142 L905,180 L872,236 L858,300 L852,360 L835,415 L740,452 L620,466 L540,472 L470,476 L400,452 L300,424 L190,404 L120,390 L95,356 L72,300 L40,234 L45,150 L50,92 Z";
 const REGIONS = [{ label: "WEST", x: 92, y: 200 }, { label: "SOUTH", x: 540, y: 380 }, { label: "MIDWEST", x: 640, y: 130 }, { label: "NORTHEAST", x: 870, y: 120 }];
@@ -102,7 +112,6 @@ export default function CoverageMap() {
         ) : (
           <>
             <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-stone-900" /> Live now</span>
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full border-2 border-stone-500" /> Coming soon</span>
             <span className="ml-auto">Hover a city for detail</span>
           </>
         )}
