@@ -385,6 +385,27 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     avgReviewDays: 20,
     tier: 1,
   },
+  "buffalo": {
+    name: "Buffalo",
+    slug: "buffalo",
+    state: "NY",
+    stateSlug: "new-york",
+    endpoint: "https://data.buffalony.gov/resource/9p2d-f3yt.json",
+    addressField: "stname",
+    streetField: null,
+    typeField: "aptype",
+    dateField: "issued",
+    statusField: "",
+    valueField: "value",
+    descField: "descofwork",
+    permitteeField: "applicant",
+    totalPermits: "200k+",
+    population: "275k",
+    permitAuthority: "Buffalo Department of Permit & Inspection Services",
+    permitAuthorityUrl: "https://www.buffalony.gov/1376/Public-Data",
+    avgReviewDays: 18,
+    tier: 1,
+  },
 };
 
 export const INFO_CITIES: Record<string, CityConfig> = {};
