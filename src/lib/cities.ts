@@ -406,6 +406,28 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     avgReviewDays: 18,
     tier: 1,
   },
+  "philadelphia": {
+    name: "Philadelphia",
+    slug: "philadelphia",
+    state: "PA",
+    stateSlug: "pennsylvania",
+    platform: "arcgis",
+    endpoint: "https://services.arcgis.com/fLeGjb7u4uXqeF9q/arcgis/rest/services/PERMITS/FeatureServer/0",
+    addressField: "address",
+    streetField: null,
+    typeField: "permitdescription",
+    dateField: "permitissuedate",
+    statusField: "status",
+    valueField: "",
+    descField: "approvedscopeofwork",
+    permitteeField: "contractorname",
+    totalPermits: "880k+",
+    population: "1.6M",
+    permitAuthority: "Philadelphia Department of Licenses & Inspections (L&I)",
+    permitAuthorityUrl: "https://www.phila.gov/departments/department-of-licenses-and-inspections/",
+    avgReviewDays: 20,
+    tier: 1,
+  },
 };
 
 export const INFO_CITIES: Record<string, CityConfig> = {};
