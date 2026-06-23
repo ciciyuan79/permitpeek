@@ -1,6 +1,6 @@
 // src/lib/cities.ts
-// 16 verified cities across Socrata + ArcGIS. Denver multi-endpoint.
-// Miami-Dade uses statusMap to decode A/E/F status codes.
+// 19 verified cities across Socrata + ArcGIS + CKAN.
+// Denver multi-endpoint. Miami-Dade statusMap. Boston via CKAN.
 // Replace your current src/lib/cities.ts with this entire file
 
 export interface CityConfig {
@@ -10,7 +10,8 @@ export interface CityConfig {
   stateSlug: string;
   endpoint?: string;
   endpoints?: string[];
-  platform?: "socrata" | "arcgis";
+  platform?: "socrata" | "arcgis" | "ckan";
+  ckanBaseUrl?: string;
   addressField?: string;
   streetField?: string | null;
   typeField?: string;
@@ -22,7 +23,7 @@ export interface CityConfig {
   ownerField?: string;
   permitteeField?: string;
   contractorFromContacts?: boolean;
-  statusMap?: Record<string, string>;   // decode coded status values (e.g. Miami-Dade A/E/F)
+  statusMap?: Record<string, string>;
   totalPermits?: string;
   population?: string;
   permitAuthority: string;
@@ -425,6 +426,29 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     population: "1.6M",
     permitAuthority: "Philadelphia Department of Licenses & Inspections (L&I)",
     permitAuthorityUrl: "https://www.phila.gov/departments/department-of-licenses-and-inspections/",
+    avgReviewDays: 20,
+    tier: 1,
+  },
+  "boston": {
+    name: "Boston",
+    slug: "boston",
+    state: "MA",
+    stateSlug: "massachusetts",
+    platform: "ckan",
+    ckanBaseUrl: "https://data.boston.gov",
+    endpoint: "6ddcd912-32a0-43df-9908-63574f8c7e77",
+    addressField: "address",
+    streetField: null,
+    typeField: "permittypedescr",
+    dateField: "issued_date",
+    statusField: "status",
+    valueField: "declared_valuation",
+    descField: "description",
+    permitteeField: "applicant",
+    totalPermits: "728k+",
+    population: "650k",
+    permitAuthority: "Boston Inspectional Services Department (ISD)",
+    permitAuthorityUrl: "https://www.boston.gov/departments/inspectional-services",
     avgReviewDays: 20,
     tier: 1,
   },
