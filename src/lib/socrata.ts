@@ -1,8 +1,10 @@
 // src/lib/socrata.ts
 //
-// Permit search supporting BOTH Socrata and ArcGIS portals.
-// ArcGIS cities may have one `endpoint` or multiple `endpoints` (merged).
-// Optional `statusMap` decodes coded status values (e.g. Miami-Dade A/E/F).
+// Permit search supporting Socrata, ArcGIS, AND CKAN portals.
+// - Socrata: ?$where= SoQL
+// - ArcGIS: /query?where=...&f=json (features[].attributes), one or many endpoints
+// - CKAN: /api/3/action/datastore_search_sql with SQL (result.records)
+// Optional statusMap decodes coded status values.
 
 import { CityConfig } from "./cities";
 
@@ -262,6 +264,38 @@ async function arcgisSearch(city: CityConfig, parsed: ParsedAddress) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// CKAN (Boston, Pittsburgh, etc.)
+// Uses datastore_search_sql with real SQL. resource_id is in city.endpoint.
+// ═══════════════════════════════════════════════════════════
+
+async function ckanSearch(city: CityConfig, parsed: ParsedAddress) {
+  const resourceId = city.endpoint || "";
+  const baseUrl = city.ckanBaseUrl || "";
+  const field = city.addressField || "address";
+  const dateField = city.dateField;
+
+  const house = parsed.houseNumber.replace(/'/g, "''");
+  const keyword = parsed.streetKeyword.replace(/'/g, "''");
+
+  // City-safe: require house number AND street keyword, case-insensitive.
+  const where = `UPPER("${field}") LIKE '%${house}%' AND UPPER("${field}") LIKE '%${keyword}%'`;
+  const order = dateField ? ` ORDER BY "${dateField}" DESC` : "";
+  const sql = `SELECT * FROM "${resourceId}" WHERE ${where}${order} LIMIT 50`;
+
+  const url = `${baseUrl}/api/3/action/datastore_search_sql?sql=${encodeURIComponent(sql)}`;
+
+  try {
+    const res = await fetch(url, { next: { revalidate: 3600 } });
+    if (!res.ok) return { permits: [] as Record<string, unknown>[], total: 0 };
+    const data = await res.json();
+    const records = (data?.result?.records || []) as Record<string, unknown>[];
+    return { permits: records, total: records.length };
+  } catch {
+    return { permits: [] as Record<string, unknown>[], total: 0 };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
 // MAIN EXPORTS
 // ═══════════════════════════════════════════════════════════
 
@@ -279,11 +313,23 @@ export async function fetchPermitsWithCount(
     return { permits: [], totalCount: 0, showingCount: 0 };
   }
 
-  const isArcgis = city.platform === "arcgis";
+  const platform = city.platform || "socrata";
 
-  const { permits: rawResults, total } = isArcgis
-    ? await arcgisSearch(city, parsed)
-    : await socrataSearch(city, parsed);
+  let rawResults: Record<string, unknown>[];
+  let total: number;
+
+  if (platform === "arcgis") {
+    const r = await arcgisSearch(city, parsed);
+    rawResults = r.permits; total = r.total;
+  } else if (platform === "ckan") {
+    const r = await ckanSearch(city, parsed);
+    rawResults = r.permits; total = r.total;
+  } else {
+    const r = await socrataSearch(city, parsed);
+    rawResults = r.permits; total = r.total;
+  }
+
+  const isArcgis = platform === "arcgis";
 
   const {
     addressField, streetField, typeField, dateField, statusField,
@@ -310,7 +356,6 @@ export async function fetchPermitsWithCount(
       ? formatArcgisDate(dateField ? item[dateField] : undefined)
       : get(dateField);
 
-    // Status, with optional code decoding (e.g. Miami-Dade A/E/F)
     let status = get(statusField);
     if (!status) {
       status = "Unknown";
@@ -319,7 +364,7 @@ export async function fetchPermitsWithCount(
     }
 
     return {
-      id: get("id") || get("PERMIT_ID") || get("PERMIT_NUM") || get("PermitNumber") || `permit-${index}`,
+      id: get("id") || get("PERMIT_ID") || get("PERMIT_NUM") || get("PermitNumber") || get("permitnumber") || `permit-${index}`,
       type: get(typeField) || "Unknown",
       date,
       status,
