@@ -6,10 +6,10 @@ const CITIES = [
   { n: "Seattle", st: "WA", lat: 47.61, lon: -122.33, r: "410K" },
   { n: "San Francisco", st: "CA", lat: 37.77, lon: -122.42, r: "1.2M" },
   { n: "Los Angeles", st: "CA", lat: 34.05, lon: -118.24, r: "2.1M" },
-  { n: "San Diego County", st: "CA", lat: 32.83, lon: -116.77, r: "100K" },
-  { n: "Phoenix Metro", st: "AZ", lat: 33.45, lon: -112.07, r: "100K", dx: -34, dy: -12 },
-  { n: "Mesa", st: "AZ", lat: 33.42, lon: -111.83, r: "300K", dx: 28, dy: 4 },
-  { n: "Tempe", st: "AZ", lat: 33.43, lon: -111.94, r: "200K", dx: 4, dy: 18 },
+  { n: "San Diego", st: "CA", lat: 32.83, lon: -116.77, r: "100K", dx: -10, dy: 16 },
+  { n: "Phoenix", st: "AZ", lat: 33.45, lon: -112.07, r: "100K", dx: 0, dy: -14 },
+  { n: "Mesa", st: "AZ", lat: 33.42, lon: -111.83, r: "300K", dx: 26, dy: 4 },
+  { n: "Tempe", st: "AZ", lat: 33.43, lon: -111.94, r: "200K", dx: 2, dy: 18 },
   { n: "Denver", st: "CO", lat: 39.74, lon: -104.99, r: "150K" },
   { n: "Kansas City", st: "MO", lat: 39.10, lon: -94.58, r: "200K" },
   { n: "Austin", st: "TX", lat: 30.27, lon: -97.74, r: "620K" },
@@ -17,13 +17,13 @@ const CITIES = [
   { n: "Cincinnati", st: "OH", lat: 39.10, lon: -84.51, r: "300K" },
   { n: "Nashville", st: "TN", lat: 36.16, lon: -86.78, r: "250K" },
   { n: "Miami-Dade", st: "FL", lat: 25.76, lon: -80.19, r: "100K" },
-  { n: "Buffalo", st: "NY", lat: 42.89, lon: -78.88, r: "200K" },
-  { n: "Pittsburgh", st: "PA", lat: 40.44, lon: -79.99, r: "62K" },
-  { n: "Washington", st: "DC", lat: 38.90, lon: -77.04, r: "150K" },
-  { n: "Virginia Beach", st: "VA", lat: 36.85, lon: -75.98, r: "100K" },
-  { n: "Philadelphia", st: "PA", lat: 39.95, lon: -75.16, r: "880K" },
-  { n: "New York City", st: "NY", lat: 40.71, lon: -74.01, r: "4.8M" },
-  { n: "Boston", st: "MA", lat: 42.36, lon: -71.06, r: "728K" },
+  { n: "Buffalo", st: "NY", lat: 42.89, lon: -78.88, r: "200K", dx: 0, dy: -12 },
+  { n: "Pittsburgh", st: "PA", lat: 40.44, lon: -79.99, r: "62K", dx: -12, dy: 4 },
+  { n: "Washington", st: "DC", lat: 38.90, lon: -77.04, r: "150K", dx: -8, dy: 16 },
+  { n: "Virginia Beach", st: "VA", lat: 36.85, lon: -75.98, r: "100K", dx: 12, dy: 4 },
+  { n: "Philadelphia", st: "PA", lat: 39.95, lon: -75.16, r: "880K", dx: 14, dy: -6 },
+  { n: "New York City", st: "NY", lat: 40.71, lon: -74.01, r: "4.8M", dx: 6, dy: -12 },
+  { n: "Boston", st: "MA", lat: 42.36, lon: -71.06, r: "728K", dx: 8, dy: -10 },
 ];
 
 declare global {
@@ -110,7 +110,7 @@ export default function CoverageMap() {
           const p = projection([c.lon, c.lat]);
           return p ? { ...c, x: p[0], y: p[1] } : null;
         })
-        .filter(Boolean) as Array<{ n: string; st: string; r: string; x: number; y: number }>;
+        .filter(Boolean) as Array<{ n: string; st: string; r: string; x: number; y: number; dx?: number; dy?: number }>;
       pts.sort((a, b) => a.x - b.x);
 
       let lit = 0;
@@ -131,9 +131,9 @@ export default function CoverageMap() {
             .attr("opacity", 0).transition().duration(300).attr("opacity", 1).attr("r", 6.5)
             .transition().duration(160).attr("r", 4.5);
 
-         const ldx = (c as any).dx ?? 0;
-          const ldy = (c as any).dy ?? -9;
-          const anchor = (c as any).dx ? ((c as any).dx < 0 ? "end" : "start") : "middle";
+          const ldx = c.dx ?? 0;
+          const ldy = c.dy ?? -9;
+          const anchor = c.dx ? (c.dx < 0 ? "end" : "start") : "middle";
           g.append("text").attr("x", c.x + ldx).attr("y", c.y + ldy).attr("text-anchor", anchor)
             .attr("font-family", "monospace").attr("font-size", 11.5).attr("fill", "#44403c")
             .attr("letter-spacing", "0.2").attr("opacity", 0).text(c.n)
