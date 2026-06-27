@@ -120,8 +120,34 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
                     ) : (
                       <p className="font-serif text-stone-600 italic">No significant risk flags detected for this history.</p>
                     )}
-                  </div>
                 </div>
+                </div>
+
+                {/* Why this score — factor breakdown */}
+                {analysis.scoreFactors && analysis.scoreFactors.length > 0 && (
+                  <div className="mb-8 border border-stone-900/10 rounded-lg overflow-hidden">
+                    <div className="px-5 py-3 bg-stone-100/70 border-b border-stone-900/10">
+                      <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-stone-500">
+                        Why this score — {analysis.scoreValue}/100
+                      </span>
+                    </div>
+                    <div className="divide-y divide-stone-900/8">
+                      {analysis.scoreFactors.map((f, i) => (
+                        <div key={i} className="px-5 py-4 flex gap-4">
+                          <div className="shrink-0 w-14 text-right">
+                            <span className={`font-display text-xl font-light ${f.points < 0 ? "text-red-800" : f.points > 0 ? "text-stone-900" : "text-stone-400"}`}>
+                              {f.points > 0 ? `${f.points}` : f.points < 0 ? `${f.points}` : "—"}
+                            </span>
+                          </div>
+                          <div>
+                            <div className="font-serif text-[15px] text-stone-900 leading-snug">{f.label}</div>
+                            <div className="text-[13px] text-stone-500 mt-0.5 leading-relaxed">{f.detail}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-8 border-t border-stone-900/5">
                   {[
