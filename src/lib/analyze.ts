@@ -1,5 +1,6 @@
 // src/lib/analyze.ts
 // Risk analysis engine + permit code translation + accurate totals + numeric score
+// Now returns scoreFactors: a transparent breakdown of how the score was derived.
 
 import type { Permit } from "./socrata";
 
@@ -44,7 +45,7 @@ export function translatePermitType(code: string): string {
 }
 
 // ═══════════════════════════════════════════════════════════
-// RISK ANALYSIS — now supports accurate totalCount + numeric score
+// RISK ANALYSIS
 // ═══════════════════════════════════════════════════════════
 
 export type RiskScore = "clean" | "review" | "risk";
@@ -52,6 +53,12 @@ export type RiskScore = "clean" | "review" | "risk";
 export interface Flag {
   level: "high" | "med" | "low";
   text: string;
+}
+
+export interface ScoreFactor {
+  label: string;        // e.g. "Open permits"
+  points: number;       // signed: negative = deduction, positive = baseline
+  detail: string;       // plain-English explanation
 }
 
 export interface Stats {
@@ -68,7 +75,8 @@ export interface Stats {
 
 export interface Analysis {
   score: RiskScore;
-  scoreValue: number;   // NEW: 0–100 numeric score (higher = safer)
+  scoreValue: number;
+  scoreFactors: ScoreFactor[];   // NEW: transparent breakdown of the score
   flags: Flag[];
   summary: string;
   openCount: number;
@@ -94,7 +102,10 @@ export function analyzePermits(permits: Permit[], totalCount?: number): Analysis
   if (!permits.length) {
     return {
       score: "clean",
-      scoreValue: 50, // unknown / no data
+      scoreValue: 50,
+      scoreFactors: [
+        { label: "No records found", points: 0, detail: "No permit history was found for this address, so there's nothing to score. This can mean no permitted work was done, or it predates the city's digital records." },
+      ],
       flags: [],
       summary: "No permits found on record.",
       openCount: 0,
@@ -167,14 +178,66 @@ export function analyzePermits(permits: Permit[], totalCount?: number): Analysis
       ? "review"
       : "clean";
 
-  // ─── NEW: numeric 0–100 score (higher = safer) ───
-  // Starts at 100, deducts for risk signals. Mirrors the homepage gauge.
+  // ─── Numeric 0–100 score with captured factors ───
+  const scoreFactors: ScoreFactor[] = [];
   let scoreValue = 100;
-  scoreValue -= Math.min(stats.open * 6, 45);        // open permits hurt most
-  scoreValue -= Math.min(stats.expired * 4, 20);     // expired permits
-  scoreValue -= Math.min(stats.electrical * 2, 12);  // heavy electrical history
-  scoreValue -= Math.min(stats.structural * 2, 12);  // structural/renovation
+
+  scoreFactors.push({
+    label: "Baseline",
+    points: 100,
+    detail: "Every property starts at 100. Points come off for unresolved or high-activity permit signals.",
+  });
+
+  const openDeduction = Math.min(stats.open * 6, 45);
+  if (openDeduction > 0) {
+    scoreValue -= openDeduction;
+    scoreFactors.push({
+      label: `Open permits (${stats.open} in sample)`,
+      points: -openDeduction,
+      detail: "Open permits — work that was started but never inspected to completion — can delay or block a sale or mortgage. These weigh the most.",
+    });
+  }
+
+  const expiredDeduction = Math.min(stats.expired * 4, 20);
+  if (expiredDeduction > 0) {
+    scoreValue -= expiredDeduction;
+    scoreFactors.push({
+      label: `Expired permits (${stats.expired} in sample)`,
+      points: -expiredDeduction,
+      detail: "Expired permits may need to be reopened and re-inspected before the work is considered legal and closed.",
+    });
+  }
+
+  const elecDeduction = Math.min(stats.electrical * 2, 12);
+  if (elecDeduction > 0) {
+    scoreValue -= elecDeduction;
+    scoreFactors.push({
+      label: `Electrical work history (${stats.electrical} in sample)`,
+      points: -elecDeduction,
+      detail: "A heavy electrical permit history isn't bad on its own, but it's worth confirming the work was finaled and done by licensed contractors.",
+    });
+  }
+
+  const structDeduction = Math.min(stats.structural * 2, 12);
+  if (structDeduction > 0) {
+    scoreValue -= structDeduction;
+    scoreFactors.push({
+      label: `Structural / renovation work (${stats.structural} in sample)`,
+      points: -structDeduction,
+      detail: "Additions and structural changes are where unpermitted square footage and code issues most often hide. Worth verifying against the listing.",
+    });
+  }
+
   scoreValue = Math.max(8, Math.min(100, Math.round(scoreValue)));
+
+  if (scoreFactors.length === 1) {
+    // Only baseline — nothing was deducted.
+    scoreFactors.push({
+      label: "No risk signals",
+      points: 0,
+      detail: "No open, expired, or high-activity permit signals were found in the records reviewed. This is a clean permit profile.",
+    });
+  }
 
   let summary: string;
   if (isSubset) {
@@ -186,6 +249,7 @@ export function analyzePermits(permits: Permit[], totalCount?: number): Analysis
   return {
     score,
     scoreValue,
+    scoreFactors,
     flags,
     summary,
     openCount: stats.open,
