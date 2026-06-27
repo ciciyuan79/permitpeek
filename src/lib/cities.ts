@@ -1,6 +1,4 @@
 // src/lib/cities.ts
-// 21 verified cities across Socrata + ArcGIS + CKAN.
-// Adds dataPortalUrl for "verify at source" links.
 
 export interface CityConfig {
   name: string;
