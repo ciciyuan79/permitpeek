@@ -4,7 +4,7 @@ export interface CityConfig {
   name: string;
   slug: string;
   state: string;
-  stateSlug: string;
+  stateSlug: string; 
   endpoint?: string;
   endpoints?: string[];
   platform?: "socrata" | "arcgis" | "ckan";
