@@ -1,109 +1,185 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
-// All 21 live cities, positioned with de-cluttered AZ + Northeast clusters.
 const CITIES = [
-  { name: "Seattle", state: "WA", x: 95, y: 92, recs: "410K" },
-  { name: "San Francisco", state: "CA", x: 60, y: 240, recs: "1.2M" },
-  { name: "Los Angeles", state: "CA", x: 118, y: 332, recs: "2.1M" },
-  { name: "San Diego County", state: "CA", x: 135, y: 372, recs: "100K" },
-  { name: "Phoenix Metro", state: "AZ", x: 210, y: 348, recs: "100K" },
-  { name: "Mesa", state: "AZ", x: 268, y: 360, recs: "300K" },
-  { name: "Tempe", state: "AZ", x: 238, y: 384, recs: "200K" },
-  { name: "Denver", state: "CO", x: 388, y: 250, recs: "150K" },
-  { name: "Kansas City", state: "MO", x: 540, y: 250, recs: "200K" },
-  { name: "Austin", state: "TX", x: 485, y: 428, recs: "620K" },
-  { name: "Chicago", state: "IL", x: 655, y: 200, recs: "890K" },
-  { name: "Cincinnati", state: "OH", x: 715, y: 248, recs: "300K" },
-  { name: "Nashville", state: "TN", x: 690, y: 312, recs: "250K" },
-  { name: "Miami-Dade", state: "FL", x: 815, y: 458, recs: "100K" },
-  { name: "Buffalo", state: "NY", x: 805, y: 162, recs: "200K" },
-  { name: "Pittsburgh", state: "PA", x: 788, y: 220, recs: "62K" },
-  { name: "Washington", state: "DC", x: 845, y: 250, recs: "150K" },
-  { name: "Virginia Beach", state: "VA", x: 862, y: 286, recs: "100K" },
-  { name: "Philadelphia", state: "PA", x: 870, y: 212, recs: "880K" },
-  { name: "New York City", state: "NY", x: 888, y: 184, recs: "4.8M" },
-  { name: "Boston", state: "MA", x: 916, y: 156, recs: "728K" },
+  { n: "Seattle", st: "WA", lat: 47.61, lon: -122.33, r: "410K" },
+  { n: "San Francisco", st: "CA", lat: 37.77, lon: -122.42, r: "1.2M" },
+  { n: "Los Angeles", st: "CA", lat: 34.05, lon: -118.24, r: "2.1M" },
+  { n: "San Diego County", st: "CA", lat: 32.83, lon: -116.77, r: "100K" },
+  { n: "Phoenix Metro", st: "AZ", lat: 33.45, lon: -112.07, r: "100K" },
+  { n: "Mesa", st: "AZ", lat: 33.42, lon: -111.83, r: "300K" },
+  { n: "Tempe", st: "AZ", lat: 33.43, lon: -111.94, r: "200K" },
+  { n: "Denver", st: "CO", lat: 39.74, lon: -104.99, r: "150K" },
+  { n: "Kansas City", st: "MO", lat: 39.10, lon: -94.58, r: "200K" },
+  { n: "Austin", st: "TX", lat: 30.27, lon: -97.74, r: "620K" },
+  { n: "Chicago", st: "IL", lat: 41.88, lon: -87.63, r: "890K" },
+  { n: "Cincinnati", st: "OH", lat: 39.10, lon: -84.51, r: "300K" },
+  { n: "Nashville", st: "TN", lat: 36.16, lon: -86.78, r: "250K" },
+  { n: "Miami-Dade", st: "FL", lat: 25.76, lon: -80.19, r: "100K" },
+  { n: "Buffalo", st: "NY", lat: 42.89, lon: -78.88, r: "200K" },
+  { n: "Pittsburgh", st: "PA", lat: 40.44, lon: -79.99, r: "62K" },
+  { n: "Washington", st: "DC", lat: 38.90, lon: -77.04, r: "150K" },
+  { n: "Virginia Beach", st: "VA", lat: 36.85, lon: -75.98, r: "100K" },
+  { n: "Philadelphia", st: "PA", lat: 39.95, lon: -75.16, r: "880K" },
+  { n: "New York City", st: "NY", lat: 40.71, lon: -74.01, r: "4.8M" },
+  { n: "Boston", st: "MA", lat: 42.36, lon: -71.06, r: "728K" },
 ];
-const US_PATH = "M60,58 L300,44 L540,42 L600,54 L760,60 L880,70 L945,96 L935,142 L905,180 L872,236 L858,300 L852,360 L835,415 L740,452 L620,466 L540,472 L470,476 L400,452 L300,424 L190,404 L120,390 L95,356 L72,300 L40,234 L45,150 L50,92 Z";
-const REGIONS = [{ label: "WEST", x: 92, y: 200 }, { label: "SOUTH", x: 540, y: 380 }, { label: "MIDWEST", x: 640, y: 130 }, { label: "NORTHEAST", x: 870, y: 120 }];
 
-// Cascade order: west -> east by x position
-const ORDER = CITIES.map((_, i) => i).sort((a, b) => CITIES[a].x - CITIES[b].x);
+declare global {
+  interface Window {
+    d3?: typeof import("d3");
+    topojson?: typeof import("topojson-client");
+  }
+}
+
+function loadScript(src: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) {
+      resolve();
+      return;
+    }
+    const s = document.createElement("script");
+    s.src = src;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error(`Failed to load ${src}`));
+    document.head.appendChild(s);
+  });
+}
 
 export default function CoverageMap() {
   const ref = useRef<HTMLDivElement>(null);
-  const [lit, setLit] = useState<Set<number>>(new Set());
-  const [started, setStarted] = useState(false);
-  const [done, setDone] = useState(false);
-  const [hover, setHover] = useState<number | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [count, setCount] = useState(0);
+  const [hover, setHover] = useState<{ n: string; st: string; r: string } | null>(null);
+  const [ready, setReady] = useState(false);
+  const startedRef = useRef(false);
+  const timersRef = useRef<number[]>([]);
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const o = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting && !started) {
-        setStarted(true);
-        ORDER.forEach((cityIdx, step) => {
-          setTimeout(() => {
-            setLit((prev) => {
-              const next = new Set(prev);
-              next.add(cityIdx);
-              return next;
-            });
-            if (step === ORDER.length - 1) setTimeout(() => setDone(true), 400);
-          }, step * 140);
-        });
-        o.disconnect();
-      }
-    }, { threshold: 0.3 });
-    o.observe(el);
-    return () => o.disconnect();
-  }, [started]);
+    let cancelled = false;
 
-  const active = lit.size;
-  const hc = hover != null ? CITIES[hover] : null;
+    async function init() {
+      try {
+        await loadScript("https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js");
+        await loadScript("https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js");
+        if (cancelled) return;
+
+        const d3 = window.d3!;
+        const topojson = window.topojson!;
+        const W = 960, H = 560;
+        const svg = d3.select(svgRef.current);
+        svg.selectAll("*").remove();
+
+        const projection = d3.geoAlbersUsa().scale(1180).translate([W / 2, H / 2]);
+        const path = d3.geoPath().projection(projection as any);
+
+        const us: any = await d3.json("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json");
+        if (cancelled) return;
+
+        const states = topojson.feature(us, us.objects.states) as any;
+        const mesh = topojson.mesh(us, us.objects.states, (a: any, b: any) => a !== b);
+        const nation = topojson.feature(us, us.objects.nation) as any;
+
+        svg.append("g").selectAll("path").data(states.features).join("path")
+          .attr("d", path as any).attr("fill", "#e7e5e4").attr("stroke", "none");
+        svg.append("path").datum(mesh).attr("d", path as any).attr("fill", "none")
+          .attr("stroke", "rgba(28,25,23,0.14)").attr("stroke-width", 0.6);
+        svg.append("path").datum(nation).attr("d", path as any).attr("fill", "none")
+          .attr("stroke", "rgba(28,25,23,0.32)").attr("stroke-width", 1.2);
+
+        setReady(true);
+
+        const observer = new IntersectionObserver(([e]) => {
+          if (e.isIntersecting && !startedRef.current) {
+            startedRef.current = true;
+            runCascade(d3, projection);
+            observer.disconnect();
+          }
+        }, { threshold: 0.3 });
+        if (ref.current) observer.observe(ref.current);
+      } catch {
+        // CDN failed; map just won't render. Silent.
+      }
+    }
+
+    function runCascade(d3: any, projection: any) {
+      const svg = d3.select(svgRef.current);
+      const pts = CITIES
+        .map((c) => {
+          const p = projection([c.lon, c.lat]);
+          return p ? { ...c, x: p[0], y: p[1] } : null;
+        })
+        .filter(Boolean) as Array<{ n: string; st: string; r: string; x: number; y: number }>;
+      pts.sort((a, b) => a.x - b.x);
+
+      let lit = 0;
+      pts.forEach((c, i) => {
+        const t = window.setTimeout(() => {
+          const g = svg.append("g").attr("class", "cm-city").style("cursor", "pointer");
+
+          g.on("mouseenter", () => setHover({ n: c.n, st: c.st, r: c.r }))
+            .on("mouseleave", () => setHover(null));
+
+          g.append("circle").attr("cx", c.x).attr("cy", c.y).attr("r", 18).attr("fill", "transparent");
+
+          const halo = g.append("circle").attr("cx", c.x).attr("cy", c.y).attr("r", 4)
+            .attr("fill", "none").attr("stroke", "rgba(28,25,23,0.4)").attr("stroke-width", 1.5).attr("opacity", 0.55);
+
+          g.append("circle").attr("cx", c.x).attr("cy", c.y).attr("r", 4)
+            .attr("fill", "#1c1917").attr("stroke", "#f5f5f4").attr("stroke-width", 0.8)
+            .attr("opacity", 0).transition().duration(300).attr("opacity", 1).attr("r", 6.5)
+            .transition().duration(160).attr("r", 4.5);
+
+          g.append("text").attr("x", c.x).attr("y", c.y - 9).attr("text-anchor", "middle")
+            .attr("font-family", "monospace").attr("font-size", 11.5).attr("fill", "#44403c")
+            .attr("letter-spacing", "0.2").attr("opacity", 0).text(c.n)
+            .transition().duration(300).attr("opacity", 1);
+
+          const pulse = () => {
+            halo.attr("r", 4).attr("opacity", 0.5)
+              .transition().duration(2600).ease(d3.easeQuadOut)
+              .attr("r", 16).attr("opacity", 0)
+              .on("end", pulse);
+          };
+          pulse();
+
+          lit++;
+          setCount(lit);
+        }, i * 130);
+        timersRef.current.push(t);
+      });
+    }
+
+    init();
+
+    return () => {
+      cancelled = true;
+      timersRef.current.forEach((t) => clearTimeout(t));
+    };
+  }, []);
 
   return (
     <div ref={ref} className="relative bg-stone-100 border border-stone-900/10 rounded-2xl p-6 overflow-hidden">
       <div className="flex justify-between items-baseline mb-2">
         <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-stone-400">United States · Coverage</div>
-        <div className="font-mono text-[11px] text-stone-600">{active} / {CITIES.length} cities online</div>
+        <div className="font-mono text-[11px] text-stone-600">{count} / {CITIES.length} cities online</div>
       </div>
-      <svg viewBox="0 0 1000 500" className="w-full block" onMouseLeave={() => setHover(null)}>
-        <defs>
-          <pattern id="cmgrid" width="34" height="34" patternUnits="userSpaceOnUse">
-            <path d="M 34 0 L 0 0 0 34" fill="none" stroke="rgba(28,25,23,0.06)" strokeWidth="1" />
-          </pattern>
-          <clipPath id="cmus"><path d={US_PATH} /></clipPath>
-        </defs>
-        <g clipPath="url(#cmus)">
-          <rect width="1000" height="500" fill="#e7e5e4" />
-          <rect width="1000" height="500" fill="url(#cmgrid)" />
-        </g>
-        <path d={US_PATH} fill="none" stroke="rgba(28,25,23,0.28)" strokeWidth="1.5" strokeLinejoin="round" style={{ opacity: started ? 1 : 0, transition: "opacity 1s ease" }} />
-        {REGIONS.map((r, i) => (
-          <text key={i} x={r.x} y={r.y} textAnchor="middle" fontFamily="monospace" fontSize="12" fill="rgba(28,25,23,0.18)" letterSpacing="2" style={{ opacity: started ? 1 : 0, transition: `opacity 1s ease ${0.3 + i * 0.1}s` }}>{r.label}</text>
-        ))}
-        {CITIES.map((c, i) => {
-          const on = lit.has(i);
-          const isH = hover === i;
-          return (
-            <g key={i} style={{ cursor: "pointer" }} onMouseEnter={() => setHover(i)}>
-              <circle cx={c.x} cy={c.y} r="24" fill="transparent" />
-              {on && done && <circle cx={c.x} cy={c.y} r="5" fill="none" stroke="rgba(28,25,23,0.4)" strokeWidth="2" style={{ animation: `cmPulse 2.6s ease-out ${i * 0.12}s infinite`, transformOrigin: `${c.x}px ${c.y}px` }} />}
-              <circle cx={c.x} cy={c.y} r={isH ? 8 : 5.5} fill={on ? "#1c1917" : "rgba(28,25,23,0.12)"} stroke={on ? "#1c1917" : "rgba(28,25,23,0.25)"} strokeWidth="2" style={{ transition: "all .35s ease", animation: on && !done ? `cmPop .4s ease` : "none", transformOrigin: `${c.x}px ${c.y}px` }} />
-              <text x={c.x} y={c.y - 13} textAnchor="middle" fontFamily="monospace" fontSize="14.5" fill={on ? "#44403c" : "rgba(28,25,23,0.3)"} letterSpacing="0.3" style={{ transition: "fill .4s ease", fontWeight: isH ? 600 : 400, opacity: on ? 1 : 0.35 }}>{c.name}</text>
-            </g>
-          );
-        })}
-      </svg>
+
+      <div className="relative">
+        <svg ref={svgRef} viewBox="0 0 960 560" className="w-full block" />
+        {!ready && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-400">Loading map…</span>
+          </div>
+        )}
+      </div>
+
       <div className="flex items-center gap-5 font-mono text-[11px] text-stone-400 pt-2 border-t border-stone-900/10 min-h-[30px]">
-        {hc ? (
+        {hover ? (
           <span className="text-stone-700 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-stone-900" />
-            {hc.name}, {hc.state} — Live now · ~{hc.recs} records
+            {hover.n}, {hover.st} — Live now · ~{hover.r} records
           </span>
         ) : (
           <>
@@ -112,10 +188,6 @@ export default function CoverageMap() {
           </>
         )}
       </div>
-      <style>{`
-        @keyframes cmPulse { 0% { r:5; opacity:.5 } 70% { r:24; opacity:0 } 100% { r:24; opacity:0 } }
-        @keyframes cmPop { 0% { r:5.5 } 45% { r:9 } 100% { r:5.5 } }
-      `}</style>
     </div>
   );
 }
