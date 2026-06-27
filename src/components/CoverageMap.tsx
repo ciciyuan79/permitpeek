@@ -7,9 +7,9 @@ const CITIES = [
   { n: "San Francisco", st: "CA", lat: 37.77, lon: -122.42, r: "1.2M" },
   { n: "Los Angeles", st: "CA", lat: 34.05, lon: -118.24, r: "2.1M" },
   { n: "San Diego County", st: "CA", lat: 32.83, lon: -116.77, r: "100K" },
-  { n: "Phoenix Metro", st: "AZ", lat: 33.45, lon: -112.07, r: "100K" },
-  { n: "Mesa", st: "AZ", lat: 33.42, lon: -111.83, r: "300K" },
-  { n: "Tempe", st: "AZ", lat: 33.43, lon: -111.94, r: "200K" },
+  { n: "Phoenix Metro", st: "AZ", lat: 33.45, lon: -112.07, r: "100K", dx: -34, dy: -12 },
+  { n: "Mesa", st: "AZ", lat: 33.42, lon: -111.83, r: "300K", dx: 28, dy: 4 },
+  { n: "Tempe", st: "AZ", lat: 33.43, lon: -111.94, r: "200K", dx: 4, dy: 18 },
   { n: "Denver", st: "CO", lat: 39.74, lon: -104.99, r: "150K" },
   { n: "Kansas City", st: "MO", lat: 39.10, lon: -94.58, r: "200K" },
   { n: "Austin", st: "TX", lat: 30.27, lon: -97.74, r: "620K" },
@@ -131,7 +131,10 @@ export default function CoverageMap() {
             .attr("opacity", 0).transition().duration(300).attr("opacity", 1).attr("r", 6.5)
             .transition().duration(160).attr("r", 4.5);
 
-          g.append("text").attr("x", c.x).attr("y", c.y - 9).attr("text-anchor", "middle")
+         const ldx = (c as any).dx ?? 0;
+          const ldy = (c as any).dy ?? -9;
+          const anchor = (c as any).dx ? ((c as any).dx < 0 ? "end" : "start") : "middle";
+          g.append("text").attr("x", c.x + ldx).attr("y", c.y + ldy).attr("text-anchor", anchor)
             .attr("font-family", "monospace").attr("font-size", 11.5).attr("fill", "#44403c")
             .attr("letter-spacing", "0.2").attr("opacity", 0).text(c.n)
             .transition().duration(300).attr("opacity", 1);
