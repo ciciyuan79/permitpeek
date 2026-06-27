@@ -1,5 +1,5 @@
 // src/app/report/page.tsx
-// Coverage & Data Source panel placed after the risk assessment.
+// Coverage panel after risk assessment + "verify at source" link in permit registry.
 // REPLACE your entire src/app/report/page.tsx with this file
 
 import { Metadata } from "next";
