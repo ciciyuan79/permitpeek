@@ -1,5 +1,5 @@
 // src/app/report/page.tsx
-// Updated to use accurate total count from fetchPermitsWithCount
+// Adds the Coverage & Data Source panel above the analysis.
 // REPLACE your entire src/app/report/page.tsx with this file
 
 import { Metadata } from "next";
@@ -13,6 +13,7 @@ import ScoreCard from "@/components/report/ScoreCard";
 import PermitRow from "@/components/report/PermitRow";
 import PaywallOverlay from "@/components/report/PaywallOverlay";
 import VerificationGuide from "@/components/report/VerificationGuide";
+import CoverageSourcePanel from "@/components/report/CoverageSourcePanel";
 
 interface ReportPageProps {
   searchParams: Promise<{
@@ -105,6 +106,9 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
             </div>
           </div>
         </section>
+
+        {/* Coverage & Data Source */}
+        <CoverageSourcePanel city={city} totalCount={totalCount} />
 
         {/* Analysis Overview */}
         <section className="py-12 border-b border-stone-900/10 bg-white">
