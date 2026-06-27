@@ -1,6 +1,6 @@
 // src/lib/cities.ts
 // 21 verified cities across Socrata + ArcGIS + CKAN.
-// Adds coverageStart for the Coverage & Data Source panel.
+// Adds dataPortalUrl for "verify at source" links.
 // Replace your current src/lib/cities.ts with this entire file
 
 export interface CityConfig {
@@ -28,6 +28,7 @@ export interface CityConfig {
   population?: string;
   permitAuthority: string;
   permitAuthorityUrl?: string;
+  dataPortalUrl?: string;     // public permit-search portal for "verify at source" links
   avgReviewDays?: number;
   coverageStart?: string;     // e.g. "2009", "June 2019" — shown in coverage panel; omit if unknown
   tier: 1 | 2;
