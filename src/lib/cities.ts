@@ -1,7 +1,6 @@
 // src/lib/cities.ts
 // 21 verified cities across Socrata + ArcGIS + CKAN.
 // Adds dataPortalUrl for "verify at source" links.
-// Replace your current src/lib/cities.ts with this entire file
 
 export interface CityConfig {
   name: string;
@@ -28,9 +27,9 @@ export interface CityConfig {
   population?: string;
   permitAuthority: string;
   permitAuthorityUrl?: string;
-  dataPortalUrl?: string;     // public permit-search portal for "verify at source" links
+  dataPortalUrl?: string;
   avgReviewDays?: number;
-  coverageStart?: string;     // e.g. "2009", "June 2019" — shown in coverage panel; omit if unknown
+  coverageStart?: string;
   tier: 1 | 2;
 }
 
@@ -42,10 +41,6 @@ export interface StateConfig {
   topCities: string[];
   permitAuthority: string;
 }
-
-// ═══════════════════════════════════════════════════════════
-// TIER 1: LIVE DATA CITIES
-// ═══════════════════════════════════════════════════════════
 
 export const LIVE_CITIES: Record<string, CityConfig> = {
   "new-york": {
