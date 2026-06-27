@@ -190,6 +190,17 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
                   Showing the {permits.length} most recent of {totalCount.toLocaleString()} total permits
                 </p>
               )}
+              {permits.length > 0 && (city.dataPortalUrl || city.permitAuthorityUrl) && (
+                
+                  href={city.dataPortalUrl || city.permitAuthorityUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 mt-4 font-mono text-[11px] uppercase tracking-[0.12em] text-stone-600 hover:text-stone-900 border-b border-stone-300 hover:border-stone-900 pb-0.5 transition-colors"
+                >
+                  Verify any permit at {city.name}&rsquo;s official records
+                  <span aria-hidden="true">↗</span>
+                </a>
+              )}
             </div>
             
             <div className="space-y-1px bg-stone-900/10 border border-stone-900/10 relative">
