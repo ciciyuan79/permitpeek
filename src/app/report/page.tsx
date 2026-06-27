@@ -100,7 +100,7 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
                 <ScoreCard score={analysis.score} scoreValue={analysis.scoreValue} summary={analysis.summary} />
               </div>
 
-              <div className="lg:col-span-8">
+              <div className="lg:col-span-8"> 
                 <div className="mb-8">
                   <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500 mb-6 block">
                     Section 01 · Risk Assessment
