@@ -1,5 +1,5 @@
 // src/app/report/page.tsx
-// Adds the Coverage & Data Source panel above the analysis.
+// Coverage & Data Source panel placed after the risk assessment.
 // REPLACE your entire src/app/report/page.tsx with this file
 
 import { Metadata } from "next";
@@ -107,9 +107,6 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
           </div>
         </section>
 
-        {/* Coverage & Data Source */}
-        <CoverageSourcePanel city={city} totalCount={totalCount} />
-
         {/* Analysis Overview */}
         <section className="py-12 border-b border-stone-900/10 bg-white">
           <div className="max-w-7xl mx-auto px-6 lg:px-10">
@@ -176,6 +173,9 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
             </div>
           </div>
         </section>
+
+        {/* Coverage & Data Source */}
+        <CoverageSourcePanel city={city} totalCount={totalCount} />
 
         {/* Permit List */}
         <section className="py-24 bg-stone-50">
