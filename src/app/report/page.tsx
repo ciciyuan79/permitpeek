@@ -1,6 +1,4 @@
 // src/app/report/page.tsx
-// Coverage panel after risk assessment + "verify at source" link in permit registry.
-// REPLACE your entire src/app/report/page.tsx with this file
 
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -73,11 +71,12 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
 
   const isUnlocked = unlocked === "true";
   const visiblePermits = isUnlocked ? permits : permits.slice(0, 2);
-  
-  // Use real total for hidden count calculation
-  const hiddenCount = isUnlocked 
-    ? 0 
+
+  const hiddenCount = isUnlocked
+    ? 0
     : Math.max(0, totalCount - visiblePermits.length);
+
+  const verifyUrl = city.dataPortalUrl || city.permitAuthorityUrl;
 
   return (
     <div className="min-h-screen flex flex-col bg-stone-50">
@@ -190,9 +189,9 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
                   Showing the {permits.length} most recent of {totalCount.toLocaleString()} total permits
                 </p>
               )}
-              {permits.length > 0 && (city.dataPortalUrl || city.permitAuthorityUrl) && (
+              {permits.length > 0 && verifyUrl && (
                 
-                  href={city.dataPortalUrl || city.permitAuthorityUrl}
+                  href={verifyUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 mt-4 font-mono text-[11px] uppercase tracking-[0.12em] text-stone-600 hover:text-stone-900 border-b border-stone-300 hover:border-stone-900 pb-0.5 transition-colors"
