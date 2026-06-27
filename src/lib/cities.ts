@@ -1,6 +1,6 @@
 // src/lib/cities.ts
-// 19 verified cities across Socrata + ArcGIS + CKAN.
-// Denver multi-endpoint. Miami-Dade statusMap. Boston via CKAN.
+// 21 verified cities across Socrata + ArcGIS + CKAN.
+// Adds coverageStart for the Coverage & Data Source panel.
 // Replace your current src/lib/cities.ts with this entire file
 
 export interface CityConfig {
@@ -29,6 +29,7 @@ export interface CityConfig {
   permitAuthority: string;
   permitAuthorityUrl?: string;
   avgReviewDays?: number;
+  coverageStart?: string;     // e.g. "2009", "June 2019" — shown in coverage panel; omit if unknown
   tier: 1 | 2;
 }
 
@@ -108,6 +109,7 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     permitAuthority: "Chicago Department of Buildings",
     permitAuthorityUrl: "https://www.chicago.gov/city/en/depts/bldgs.html",
     avgReviewDays: 18,
+    coverageStart: "2006",
     tier: 1,
   },
   "austin": {
@@ -278,6 +280,7 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     permitAuthority: "Denver Community Planning & Development",
     permitAuthorityUrl: "https://www.denvergov.org/Government/Agencies-Departments-Offices/Community-Planning-and-Development",
     avgReviewDays: 20,
+    coverageStart: "2012",
     tier: 1,
   },
   "mesa-az": {
@@ -298,6 +301,7 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     permitAuthority: "City of Mesa Development Services",
     permitAuthorityUrl: "https://www.mesaaz.gov/business/development-services",
     avgReviewDays: 15,
+    coverageStart: "2003",
     tier: 1,
   },
   "tempe-az": {
@@ -384,6 +388,7 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     permitAuthority: "Miami-Dade County Building Department",
     permitAuthorityUrl: "https://www.miamidade.gov/global/economy/building/home.page",
     avgReviewDays: 20,
+    coverageStart: "1980s",
     tier: 1,
   },
   "buffalo": {
@@ -405,6 +410,7 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     permitAuthority: "Buffalo Department of Permit & Inspection Services",
     permitAuthorityUrl: "https://www.buffalony.gov/1376/Public-Data",
     avgReviewDays: 18,
+    coverageStart: "2007",
     tier: 1,
   },
   "philadelphia": {
@@ -427,6 +433,7 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     permitAuthority: "Philadelphia Department of Licenses & Inspections (L&I)",
     permitAuthorityUrl: "https://www.phila.gov/departments/department-of-licenses-and-inspections/",
     avgReviewDays: 20,
+    coverageStart: "2007",
     tier: 1,
   },
   "boston": {
@@ -450,6 +457,7 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     permitAuthority: "Boston Inspectional Services Department (ISD)",
     permitAuthorityUrl: "https://www.boston.gov/departments/inspectional-services",
     avgReviewDays: 20,
+    coverageStart: "2009",
     tier: 1,
   },
   "pittsburgh": {
@@ -473,6 +481,7 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     permitAuthority: "Pittsburgh Permits, Licenses & Inspections (PLI)",
     permitAuthorityUrl: "https://pittsburghpa.gov/pli/pli-permits",
     avgReviewDays: 18,
+    coverageStart: "June 2019",
     tier: 1,
   },
   "san-diego-county": {
@@ -494,6 +503,7 @@ export const LIVE_CITIES: Record<string, CityConfig> = {
     permitAuthority: "San Diego County Planning & Development Services",
     permitAuthorityUrl: "https://www.sandiegocounty.gov/pds/",
     avgReviewDays: 20,
+    coverageStart: "2017",
     tier: 1,
   },
 };
