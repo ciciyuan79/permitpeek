@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces, Source_Serif_4, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
+import SessionWrapper from "@/components/SessionWrapper";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -9,13 +10,11 @@ const fraunces = Fraunces({
   display: "swap",
   axes: ["SOFT", "WONK", "opsz"],
 });
-
 const sourceSerif = Source_Serif_4({
   subsets: ["latin"],
   variable: "--font-source-serif",
   display: "swap",
 });
-
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-jetbrains-mono",
@@ -35,8 +34,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${fraunces.variable} ${sourceSerif.variable} ${jetbrainsMono.variable}`}>
       <body className="font-serif antialiased selection:bg-stone-900 selection:text-stone-50">
-        {children}
-
+        <SessionWrapper>
+          {children}
+        </SessionWrapper>
         {/* Google Analytics */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-2C27SJ7P4X"
