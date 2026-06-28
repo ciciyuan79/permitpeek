@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Lock, Mail, CreditCard, Loader2, CheckCircle2 } from "lucide-react";
+import { Lock, Mail, CreditCard, Loader2, CheckCircle2, ShieldCheck } from "lucide-react";
 
 interface PaywallOverlayProps {
   hiddenCount: number;
@@ -63,10 +63,18 @@ export default function PaywallOverlay({ hiddenCount, address, city }: PaywallOv
         <h3 className="font-display text-4xl font-light mb-4">
           Unlock {hiddenCount} more <span className="italic">records</span>
         </h3>
-        <p className="font-serif text-stone-600 mb-12 max-w-md mx-auto">
+        <p className="font-serif text-stone-600 mb-8 max-w-md mx-auto">
           The complete filing history for this address is restricted.
           Unlock the full report to see every permit, the risk breakdown, and the contractor details.
         </p>
+
+        {/* Confidence guarantee */}
+        <div className="max-w-md mx-auto mb-10 bg-stone-50 border border-stone-900/8 rounded-lg px-4 py-3 flex items-start gap-2 text-left">
+          <ShieldCheck size={16} strokeWidth={1.75} className="shrink-0 mt-0.5 text-emerald-700" />
+          <p className="font-serif text-[13px] text-stone-600 leading-relaxed">
+            <span className="text-stone-900">Our guarantee:</span> if our records for this address turn out incomplete or stale, your report is free.
+          </p>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Primary: paid unlock */}
