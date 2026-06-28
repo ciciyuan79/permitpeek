@@ -254,7 +254,7 @@ export default function HomePage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
                 { title: "Free Search", price: "$0", period: "Per address", features: ["First 2 permits", "Basic address check", "Risk score indicator", "No credit card"], cta: "Search Now", highlight: false, comingSoon: false },
-                { title: "Full Report", price: "$9", period: "One-time", features: ["Unlimited permits", "Detailed descriptions", "Contractor details", "PDF Download"], cta: "Unlock Report", highlight: true, comingSoon: false },
+                { title: "Full Report", price: "$9", period: "Per property", features: ["All permits for one address", "Detailed descriptions", "Contractor details", "PDF Download"], cta: "Unlock Report", highlight: true, comingSoon: false },
                 { title: "Address Watch", price: "$19", period: "Per month", features: ["Monitor 5 addresses", "Instant email alerts", "Monthly local digest", "Priority support"], cta: "Coming Soon", highlight: false, comingSoon: true },
               ].map((plan, i) => (
                 <div
